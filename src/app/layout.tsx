@@ -19,7 +19,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "OrderKyat - Myanmar Invoice Generator",
+  title: "OrderKyat - Myanmar Invoice Generator 🇲🇲",
   description:
     "Transform chat messages into professional PDF invoices instantly",
 };
@@ -31,6 +31,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/orderKyatIcon.ico" sizes="any" />
+        <link rel="shortcut icon" href="/orderKyatIcon.ico" />
+      </head>
       <body
         className={`${inter.variable} ${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
