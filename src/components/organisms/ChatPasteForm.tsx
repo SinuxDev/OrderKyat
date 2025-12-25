@@ -50,12 +50,14 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
     return clean.slice(0, 1000);
   };
 
+  // ✅ UPDATED: Enhanced validation for comma-separated format
   const validateFormat = (text: string) => {
     if (!text.trim()) {
       setFormatStatus("empty");
       return;
     }
 
+    // Security check
     const hasSuspiciousChars = /<|>|{|}|\[|\]|script|function|eval|alert/.test(
       text.toLowerCase()
     );
@@ -64,16 +66,35 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
       return;
     }
 
-    const hasPhone = /(\+?959\d{7,9}|09\d{7,9})/.test(text);
-    const hasPrice = /@\s*\d+/.test(text);
-    const hasItems = /\d+\s+[a-zA-Z\u1000-\u109F]+/.test(text);
-    const hasName = /^[a-zA-Z\s\u1000-\u109F]+/.test(text.trim());
+    // Check format structure
+    const parts = text.split(",").map((p) => p.trim());
 
-    if (!hasPhone) {
+    // Should have at least 3 parts: Name, Phone, Item(s)
+    if (parts.length < 3) {
+      setFormatStatus("warning");
+      return;
+    }
+
+    // Validate each component
+    const hasName = /^[a-zA-Z\s\u1000-\u109F]+$/.test(parts[0]);
+    const hasPhone = /(\+?959\d{7,9}|09\d{7,9})/.test(text);
+    const hasItems = /\d+\s+[a-zA-Z\u1000-\u109F]+/.test(text);
+    const hasPrices = /@\s*\d+/.test(text);
+
+    // Check if items are properly formatted with @ symbol
+    const itemsWithPrices = text.match(/\d+\s+[a-zA-Z\s]+@\s*\d+/g);
+    const hasProperItemFormat = itemsWithPrices && itemsWithPrices.length > 0;
+
+    // Validation logic
+    if (!hasName) {
+      setFormatStatus("warning");
+    } else if (!hasPhone) {
       setFormatStatus("missing-phone");
-    } else if (!hasItems || !hasPrice) {
+    } else if (!hasItems || !hasPrices) {
       setFormatStatus("missing-items");
-    } else if (hasPhone && hasPrice && hasItems && hasName) {
+    } else if (!hasProperItemFormat) {
+      setFormatStatus("missing-items");
+    } else if (hasName && hasPhone && hasProperItemFormat) {
       setFormatStatus("good");
     } else {
       setFormatStatus("warning");
@@ -110,7 +131,7 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
 
   const copyTemplate = async () => {
     const text =
-      "Mg Mg, 09123456789, 2 shirts @ 15000 and 3 bags @ 10000, Yangon";
+      "Mg Mg, 09123456789, 2 shirts @ 15000, 3 bags @ 100000, Yangon";
 
     try {
       await navigator.clipboard.writeText(text);
@@ -136,36 +157,37 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
     }
   };
 
+  // ✅ UPDATED: Enhanced validation messages
   const getValidationMessage = () => {
     switch (formatStatus) {
       case "good":
         return {
           icon: <CheckCircle2 className="w-3.5 h-3.5" />,
-          text: "Format looks good!",
+          text: "Format looks perfect! Ready to extract.",
           className: "text-green-600 bg-green-50 border-green-200",
         };
       case "invalid-format":
         return {
           icon: <ShieldAlert className="w-3.5 h-3.5" />,
-          text: "Invalid characters detected. Please use plain text orders only.",
+          text: "Invalid characters detected. Please use plain text only.",
           className: "text-red-600 bg-red-50 border-red-200",
         };
       case "missing-phone":
         return {
           icon: <AlertCircle className="w-3.5 h-3.5" />,
-          text: "Missing phone number (09xxxxxxxx)",
+          text: "Missing phone number. Format: 09xxxxxxxx",
           className: "text-amber-600 bg-amber-50 border-amber-200",
         };
       case "missing-items":
         return {
           icon: <AlertCircle className="w-3.5 h-3.5" />,
-          text: "Missing items or prices (e.g., 2 shirts @ 15000)",
+          text: "Missing items or prices. Use format: 2 shirts @ 15000",
           className: "text-amber-600 bg-amber-50 border-amber-200",
         };
       case "warning":
         return {
           icon: <AlertCircle className="w-3.5 h-3.5" />,
-          text: "Check format - click 'Format Help' above",
+          text: "Check format. Use: Name, Phone, Qty Item @ Price, ...",
           className: "text-amber-600 bg-amber-50 border-amber-200",
         };
       default:
@@ -173,7 +195,20 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
     }
   };
 
+  // ✅ NEW: Progressive validation indicators
+  const getDetectedComponents = () => {
+    if (!chatText.trim() || chatText.length < 5) return null;
+
+    const hasName = /^[a-zA-Z\s\u1000-\u109F]+,/.test(chatText);
+    const hasPhone = /(\+?959\d{7,9}|09\d{7,9})/.test(chatText);
+    const itemCount = (chatText.match(/\d+\s+[a-zA-Z\s]+@\s*\d+/g) || [])
+      .length;
+
+    return { hasName, hasPhone, itemCount };
+  };
+
   const validation = getValidationMessage();
+  const detected = getDetectedComponents();
 
   return (
     <motion.div
@@ -182,7 +217,6 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
       transition={{ duration: 0.5 }}
       className="w-full"
     >
-      {/* ✅ CHANGED: Increased max-width from max-w-2xl to max-w-3xl */}
       <Card className="w-full max-w-3xl mx-auto bg-white/95 backdrop-blur-sm shadow-xl border-slate-200">
         <CardHeader className="space-y-1 px-4 sm:px-6 lg:px-8 pt-5 sm:pt-6 lg:pt-8">
           <div className="flex items-center justify-between">
@@ -230,7 +264,6 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
           </motion.div>
         </CardHeader>
 
-        {/* ✅ CHANGED: Increased padding */}
         <CardContent className="space-y-4 lg:space-y-5 px-4 sm:px-6 lg:px-8 pb-5 sm:pb-6 lg:pb-8">
           {/* Format Guide */}
           <AnimatePresence>
@@ -247,17 +280,32 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
                     📝 Format Guide:
                   </p>
                   <code className="text-xs sm:text-sm lg:text-base text-blue-800 bg-blue-100 px-3 py-2 rounded block mb-4">
-                    Name, Phone, Qty Item @ Price and Qty Item @ Price, City
+                    Name, Phone, Qty Item @ Price, Qty Item @ Price{" "}
+                    <span className="text-blue-600">[, City]</span>
                   </code>
 
-                  <div className="bg-white rounded-lg p-3 lg:p-4 mb-4">
-                    <p className="text-xs sm:text-sm lg:text-base text-blue-700 mb-2 font-medium">
-                      Example:
-                    </p>
-                    <p className="text-xs sm:text-sm lg:text-base text-slate-700 font-mono">
-                      Mg Mg, 09123456789, 2 shirts @ 15000 and 3 bags @ 10000,
-                      Yangon
-                    </p>
+                  {/* Examples */}
+                  <div className="space-y-3 mb-4">
+                    {/* With city */}
+                    <div className="bg-white rounded-lg p-3 lg:p-4">
+                      <p className="text-xs sm:text-sm lg:text-base text-blue-700 mb-2 font-medium flex items-center gap-2">
+                        ✅ With city:
+                      </p>
+                      <p className="text-xs sm:text-sm lg:text-base text-slate-700 font-mono break-all">
+                        Mg Mg, 09123456789, 2 shirts @ 15000, 3 bags @ 100000,
+                        Yangon
+                      </p>
+                    </div>
+
+                    {/* Without city */}
+                    <div className="bg-white rounded-lg p-3 lg:p-4">
+                      <p className="text-xs sm:text-sm lg:text-base text-blue-700 mb-2 font-medium flex items-center gap-2">
+                        ✅ Without city (add later):
+                      </p>
+                      <p className="text-xs sm:text-sm lg:text-base text-slate-700 font-mono break-all">
+                        Mg Mg, 09123456789, 2 shirts @ 15000, 3 bags @ 100000
+                      </p>
+                    </div>
                   </div>
 
                   <motion.button
@@ -278,12 +326,33 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
                       </>
                     )}
                   </motion.button>
+
+                  <p className="text-xs text-blue-600 mt-3 italic">
+                    💡 Tip: Separate items with commas. City is optional!
+                  </p>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Input Area - ✅ CHANGED: Increased rows for desktop */}
+          {/* ✅ NEW: Format Hint Component */}
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs"
+          >
+            <span className="text-blue-600 font-medium">Format:</span>
+            <span className="text-blue-700">
+              Name<span className="text-blue-400">,</span> Phone
+              <span className="text-blue-400">,</span> Qty Item @ Price
+              <span className="text-blue-400">,</span> Qty Item @ Price
+              <span className="text-blue-400 opacity-60">
+                , City (optional)
+              </span>
+            </span>
+          </motion.div>
+
+          {/* Input Area */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -291,10 +360,10 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
             className="relative space-y-2"
           >
             <Textarea
-              placeholder="Example: Mg Mg, 09123456789, 2 shirts @ 15000 and 3 bags @ 10000, Yangon"
+              placeholder="Example: Mg Mg, 09123456789, 2 shirts @ 15000, 3 bags @ 100000 (City optional)"
               value={chatText}
               onChange={(e) => handleTextChange(e.target.value)}
-              rows={8} // ✅ Increased from 6 to 8
+              rows={8}
               maxLength={1000}
               className="resize-none bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20 text-sm sm:text-base lg:text-lg transition-all"
             />
@@ -304,6 +373,47 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
               <span>Plain text only (no HTML/code)</span>
               <span>{chatText.length}/1000</span>
             </div>
+
+            {/* ✅ NEW: Progressive validation indicators */}
+            <AnimatePresence>
+              {detected && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="flex flex-wrap gap-2 text-xs"
+                >
+                  <span
+                    className={`px-2 py-1 rounded-md font-medium ${
+                      detected.hasName
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {detected.hasName ? "✓" : "○"} Name
+                  </span>
+                  <span
+                    className={`px-2 py-1 rounded-md font-medium ${
+                      detected.hasPhone
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {detected.hasPhone ? "✓" : "○"} Phone
+                  </span>
+                  <span
+                    className={`px-2 py-1 rounded-md font-medium ${
+                      detected.itemCount > 0
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {detected.itemCount > 0 ? "✓" : "○"} Items (
+                    {detected.itemCount})
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Real-time format validation indicator */}
             <AnimatePresence>
@@ -337,7 +447,9 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
                       <p className="text-xs sm:text-sm lg:text-base text-green-800">
                         <span className="font-semibold">Found:</span>{" "}
                         {previewData.customerName || "No name"},{" "}
-                        {previewData.phone || "No phone"},{" "}
+                        {previewData.phone || "No phone"}
+                        {previewData.address && `, ${previewData.address}`}
+                        {!previewData.address && " (City can be added next)"},{" "}
                         {previewData.items.length} item(s), Total:{" "}
                         {previewData.totalPrice.toLocaleString()} Ks
                       </p>

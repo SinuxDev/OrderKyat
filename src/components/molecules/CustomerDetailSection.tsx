@@ -1,14 +1,11 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { ExtractedData } from "@/types/invoice";
+import AddressCombobox from "@/components/molecules/AddressCombox";
 
 interface CustomerDetailsSectionProps {
   formData: ExtractedData;
-  updateField: (field: keyof ExtractedData, value: string | number) => void;
+  updateField: (field: keyof ExtractedData, value: string) => void;
   handlePhoneChange: (value: string) => void;
 }
 
@@ -17,48 +14,57 @@ export default function CustomerDetailsSection({
   updateField,
   handlePhoneChange,
 }: CustomerDetailsSectionProps) {
+  const handleAddressChange = (value: string) => {
+    updateField("address", value);
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.1, duration: 0.3 }}
-      className="space-y-3"
-    >
-      <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-        <Sparkles className="w-4 h-4 text-green-600" />
-        <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">
-          Customer Details
-        </h2>
+    <div className="space-y-4 sm:space-y-5">
+      <div className="flex items-center gap-2 text-slate-700 mb-4">
+        <span className="text-2xl">🎫</span>
+        <h3 className="text-lg font-semibold">Customer Details</h3>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <motion.div whileFocus={{ scale: 1.01 }} className="space-y-2">
-          <Label className="text-sm lg:text-base">Customer Name</Label>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="customer-name" className="text-sm font-medium">
+            Customer Name
+          </Label>
           <Input
+            id="customer-name"
             value={formData.customerName}
             onChange={(e) => updateField("customerName", e.target.value)}
             placeholder="Enter customer name"
-            className="bg-slate-50 border-slate-300 text-slate-900 focus:border-green-500 focus:ring-green-500/20 text-sm sm:text-base lg:text-lg h-11 lg:h-12 transition-all"
+            className="bg-slate-50 border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-blue-500/20 h-11 lg:h-12 text-sm lg:text-base"
           />
-        </motion.div>
-        <motion.div whileFocus={{ scale: 1.01 }} className="space-y-2">
-          <Label className="text-sm lg:text-base">Phone</Label>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="phone" className="text-sm font-medium">
+            Phone
+          </Label>
           <Input
+            id="phone"
+            type="tel"
             value={formData.phone}
             onChange={(e) => handlePhoneChange(e.target.value)}
             placeholder="+95 9 XXX XXX XXX"
-            className="bg-slate-50 border-slate-300 text-slate-900 focus:border-green-500 focus:ring-green-500/20 text-sm sm:text-base lg:text-lg h-11 lg:h-12 transition-all"
+            className="bg-slate-50 border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-blue-500/20 h-11 lg:h-12 text-sm lg:text-base"
           />
-        </motion.div>
+        </div>
       </div>
-      <motion.div whileFocus={{ scale: 1.01 }} className="space-y-2">
-        <Label className="text-sm lg:text-base">Address</Label>
-        <Input
+
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Address / City</Label>
+        {/* ✅ Using named handler */}
+        <AddressCombobox
           value={formData.address}
-          onChange={(e) => updateField("address", e.target.value)}
-          placeholder="Customer address"
-          className="bg-slate-50 border-slate-300 text-slate-900 focus:border-green-500 focus:ring-green-500/20 text-sm sm:text-base lg:text-lg h-11 lg:h-12 transition-all"
+          onChange={handleAddressChange}
         />
-      </motion.div>
-    </motion.div>
+        <p className="text-xs text-slate-500">
+          💡 Select from popular cities or type your own
+        </p>
+      </div>
+    </div>
   );
 }
