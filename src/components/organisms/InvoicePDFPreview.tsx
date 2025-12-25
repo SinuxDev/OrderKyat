@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-
 import {
   Document,
   Page,
@@ -13,9 +12,18 @@ import {
 } from "@react-pdf/renderer";
 import { ExtractedData } from "@/types/invoice";
 import { StoreInfo } from "./StoreSettings";
-import { Download, ZoomIn, ZoomOut, FileText } from "lucide-react";
+import {
+  Download,
+  ZoomIn,
+  ZoomOut,
+  FileText,
+  CheckCircle,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/organisms/PageHeader";
+import { motion, AnimatePresence } from "framer-motion";
+import SubtleBackground from "@/components/atoms/SubtleBackground";
 
 const styles = StyleSheet.create({
   page: {
@@ -115,7 +123,6 @@ interface InvoicePDFPreviewProps {
 const InvoicePDFDocument = ({ data, storeInfo }: InvoicePDFPreviewProps) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      {/* Header with Store Info */}
       <View style={styles.header}>
         <Text style={styles.logo}>{storeInfo.name || "OrderKyat"}</Text>
         <Text style={styles.storeInfo}>
@@ -126,7 +133,6 @@ const InvoicePDFDocument = ({ data, storeInfo }: InvoicePDFPreviewProps) => (
         </Text>
       </View>
 
-      {/* Title */}
       <Text style={styles.title}>INVOICE</Text>
       <Text style={{ ...styles.text, textAlign: "right", fontSize: 9 }}>
         Date:{" "}
@@ -137,7 +143,6 @@ const InvoicePDFDocument = ({ data, storeInfo }: InvoicePDFPreviewProps) => (
         })}
       </Text>
 
-      {/* Customer Info */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Bill To:</Text>
         <Text style={styles.text}>{data.customerName}</Text>
@@ -145,7 +150,6 @@ const InvoicePDFDocument = ({ data, storeInfo }: InvoicePDFPreviewProps) => (
         <Text style={styles.text}>{data.address}</Text>
       </View>
 
-      {/* Items Table */}
       <View style={styles.table}>
         <View style={styles.tableHeader}>
           <Text style={styles.col1}>Item</Text>
@@ -166,14 +170,12 @@ const InvoicePDFDocument = ({ data, storeInfo }: InvoicePDFPreviewProps) => (
         ))}
       </View>
 
-      {/* Total */}
       <View style={styles.total}>
         <Text style={styles.totalText}>
           Total: {data.totalPrice.toLocaleString()} Ks
         </Text>
       </View>
 
-      {/* Footer */}
       <View style={styles.footer}>
         <Text>Thank you for your business!</Text>
         <Text>
@@ -184,7 +186,6 @@ const InvoicePDFDocument = ({ data, storeInfo }: InvoicePDFPreviewProps) => (
   </Document>
 );
 
-// ✅ Helper functions
 const getInitials = (name: string): string => {
   return name
     .split(/\s+/)
@@ -207,6 +208,22 @@ export default function InvoicePDFPreview({
 }: InvoicePDFPreviewProps) {
   const [scale, setScale] = useState(1);
   const [timestamp] = useState(() => Date.now());
+  const [showConfetti, setShowConfetti] = useState(true);
+
+  // Generate confetti positions once using useMemo
+  const confettiParticles = useMemo(
+    () =>
+      Array.from({ length: 20 }, (_, i) => ({
+        id: i,
+        left: (i * 5.3 + 7) % 100, // Deterministic positioning
+        color: ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444"][i % 5],
+        duration: 3 + (i % 3) * 0.5,
+        delay: (i % 10) * 0.05,
+        rotate: ((i * 36) % 360) - 180,
+        xOffset: ((i % 7) - 3) * 30,
+      })),
+    []
+  );
 
   const fileName = useMemo(() => {
     const storeInitials = getInitials(storeInfo.name || "OrderKyat");
@@ -215,20 +232,92 @@ export default function InvoicePDFPreview({
     return `INV-${storeInitials}-${customerInitials}-${dateStr}.pdf`;
   }, [data.customerName, storeInfo.name, timestamp]);
 
+  // Hide confetti after 3 seconds
+  useMemo(() => {
+    const timer = setTimeout(() => setShowConfetti(false), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="flex flex-col h-screen">
-      {/* ✅ Header - Hide Download button on mobile */}
+    <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50/30 to-teal-50/30 relative">
+      {/* Subtle Background Animation */}
+      <SubtleBackground />
+
+      {/* Celebratory Confetti */}
+      <AnimatePresence>
+        {showConfetti && (
+          <>
+            {confettiParticles.map((particle) => (
+              <motion.div
+                key={particle.id}
+                className="absolute w-3 h-3 rounded-full pointer-events-none z-50"
+                style={{
+                  left: `${particle.left}%`,
+                  top: -20,
+                  backgroundColor: particle.color,
+                }}
+                initial={{ y: -20, opacity: 1, rotate: 0 }}
+                animate={{
+                  y:
+                    typeof window !== "undefined"
+                      ? window.innerHeight + 20
+                      : 1000,
+                  opacity: [1, 1, 0],
+                  rotate: particle.rotate,
+                  x: particle.xOffset,
+                }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  duration: particle.duration,
+                  delay: particle.delay,
+                  ease: "easeIn",
+                }}
+              />
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Success Badge - Floating */}
+      <motion.div
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: "spring", duration: 0.6, delay: 0.2 }}
+        className="absolute top-20 right-8 z-40 hidden md:block"
+      >
+        <motion.div
+          animate={{
+            y: [0, -10, 0],
+            rotate: [0, 5, -5, 0],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="bg-green-500 text-white rounded-full p-4 shadow-xl"
+        >
+          <CheckCircle className="w-8 h-8" />
+        </motion.div>
+      </motion.div>
+
+      {/* Header */}
       <PageHeader
         showBack={true}
         onBack={onBack}
         icon={FileText}
         title="PDF Preview"
         subtitle="Review before downloading"
-        hideMobileActions={true} // ✅ Hide download button on mobile
+        hideMobileActions={true}
         actions={
           <>
-            {/* Zoom Controls - Desktop only */}
-            <div className="hidden md:flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+            {/* Zoom Controls */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="hidden md:flex items-center gap-1 bg-slate-100 rounded-lg p-1"
+            >
               <Button
                 variant="ghost"
                 size="sm"
@@ -250,44 +339,60 @@ export default function InvoicePDFPreview({
               >
                 <ZoomIn className="w-3.5 h-3.5" />
               </Button>
-            </div>
+            </motion.div>
 
-            {/* ✅ Download Button - Desktop only */}
-            <PDFDownloadLink
-              document={
-                <InvoicePDFDocument data={data} storeInfo={storeInfo} />
-              }
-              fileName={fileName}
-              className="hidden sm:inline-flex" // ✅ Hide on mobile
+            {/* Download Button with Animation */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, type: "spring" }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              {({ loading }) => (
-                <Button
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700 gap-1.5 shadow-sm h-8 sm:h-9"
-                  disabled={loading}
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span className="text-sm">
-                    {loading ? "Preparing..." : "Download PDF"}
-                  </span>
-                </Button>
-              )}
-            </PDFDownloadLink>
+              <PDFDownloadLink
+                document={
+                  <InvoicePDFDocument data={data} storeInfo={storeInfo} />
+                }
+                fileName={fileName}
+                className="hidden sm:inline-flex"
+              >
+                {({ loading }) => (
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 gap-1.5 shadow-sm h-8 sm:h-9"
+                    disabled={loading}
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span className="text-sm">
+                      {loading ? "Preparing..." : "Download PDF"}
+                    </span>
+                  </Button>
+                )}
+              </PDFDownloadLink>
+            </motion.div>
           </>
         }
       />
 
-      {/* ✅ PDF Preview Area - With bottom padding for mobile button */}
-      <div className="flex-1 bg-slate-100 overflow-auto pb-20 sm:pb-0">
+      {/* PDF Preview Area */}
+      <div className="flex-1 bg-slate-100 overflow-auto pb-20 sm:pb-0 relative z-10">
         <div className="min-h-full flex items-start justify-center p-4 md:p-8">
-          {/* Desktop: Full PDF Viewer */}
-          <div className="hidden md:block w-full max-w-4xl">
-            <div
+          {/* Desktop: Full PDF Viewer with Animation */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="hidden md:block w-full max-w-4xl"
+          >
+            <motion.div
               className="bg-white shadow-2xl rounded-lg overflow-hidden"
               style={{
                 transform: `scale(${scale})`,
                 transformOrigin: "top center",
                 transition: "transform 0.2s ease-out",
+              }}
+              whileHover={{
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               }}
             >
               <PDFViewer
@@ -298,77 +403,160 @@ export default function InvoicePDFPreview({
               >
                 <InvoicePDFDocument data={data} storeInfo={storeInfo} />
               </PDFViewer>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Mobile: Summary Card */}
-          <div className="md:hidden w-full max-w-md">
-            <div className="bg-white rounded-lg shadow-lg p-6 space-y-6">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Download className="w-8 h-8 text-green-600" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">
+          {/* Mobile: Animated Summary Card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="md:hidden w-full max-w-md"
+          >
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 space-y-6 border border-green-100">
+              {/* Success Icon */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                className="text-center"
+              >
+                <motion.div
+                  animate={{
+                    rotate: [0, 10, -10, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatDelay: 1,
+                  }}
+                  className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+                >
+                  <CheckCircle className="w-10 h-10 text-white" />
+                </motion.div>
+                <motion.h3
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-2xl font-bold text-slate-900 mb-2"
+                >
                   Invoice Ready!
-                </h3>
-                <p className="text-sm text-slate-600">
-                  Your invoice has been generated successfully
-                </p>
-              </div>
+                </motion.h3>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="text-sm text-slate-600 flex items-center justify-center gap-1"
+                >
+                  Your invoice has been generated
+                  <Sparkles className="w-4 h-4 text-yellow-500" />
+                </motion.p>
+              </motion.div>
 
-              {/* Invoice Summary */}
-              <div className="border border-slate-200 rounded-lg p-4 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Store:</span>
-                  <span className="font-medium text-slate-900">
-                    {storeInfo.name || "OrderKyat"}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Customer:</span>
-                  <span className="font-medium text-slate-900">
-                    {data.customerName}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Items:</span>
-                  <span className="font-medium text-slate-900">
-                    {data.items.length}
-                  </span>
-                </div>
-                <div className="flex justify-between text-lg font-bold pt-3 border-t border-slate-200">
+              {/* Invoice Summary with Stagger */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50"
+              >
+                {[
+                  { label: "Store", value: storeInfo.name || "OrderKyat" },
+                  { label: "Customer", value: data.customerName },
+                  { label: "Items", value: data.items.length.toString() },
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.8 + index * 0.1 }}
+                    className="flex justify-between text-sm"
+                  >
+                    <span className="text-slate-600">{item.label}:</span>
+                    <span className="font-medium text-slate-900">
+                      {item.value}
+                    </span>
+                  </motion.div>
+                ))}
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 1.1 }}
+                  className="flex justify-between text-lg font-bold pt-3 border-t border-slate-200"
+                >
                   <span className="text-slate-900">Total:</span>
-                  <span className="text-green-600">
+                  <motion.span
+                    initial={{ color: "#16a34a" }}
+                    animate={{
+                      scale: [1, 1.05, 1],
+                    }}
+                    transition={{
+                      duration: 1,
+                      repeat: 2,
+                    }}
+                    className="text-green-600"
+                  >
                     {data.totalPrice.toLocaleString()} Ks
-                  </span>
-                </div>
-              </div>
+                  </motion.span>
+                </motion.div>
+              </motion.div>
 
-              <p className="text-xs text-center text-slate-500">
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.3 }}
+                className="text-xs text-center text-slate-500"
+              >
                 💡 Preview is available on desktop devices
-              </p>
+              </motion.p>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
-      {/* ✅ Fixed Mobile Download Button - Outside content area */}
-      <div className="fixed bottom-0 left-0 right-0 sm:hidden bg-white border-t border-slate-200 p-3 shadow-lg z-20">
+      {/* Fixed Mobile Download Button with Animation */}
+      <motion.div
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
+        className="fixed bottom-0 left-0 right-0 sm:hidden bg-white border-t border-slate-200 p-3 shadow-lg z-20"
+      >
         <PDFDownloadLink
           document={<InvoicePDFDocument data={data} storeInfo={storeInfo} />}
           fileName={fileName}
         >
           {({ loading }) => (
-            <Button
-              className="w-full bg-green-600 hover:bg-green-700 h-12 text-base gap-2"
-              disabled={loading}
-            >
-              <Download className="w-5 h-5" />
-              {loading ? "Preparing PDF..." : "Download Invoice"}
-            </Button>
+            <motion.div whileTap={{ scale: 0.97 }}>
+              <Button
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12 text-base gap-2 shadow-md"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    >
+                      <Download className="w-5 h-5" />
+                    </motion.div>
+                    Preparing PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-5 h-5" />
+                    Download Invoice
+                  </>
+                )}
+              </Button>
+            </motion.div>
           )}
         </PDFDownloadLink>
-      </div>
+      </motion.div>
     </div>
   );
 }

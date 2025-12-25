@@ -43,30 +43,19 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
   const [formatStatus, setFormatStatus] = useState<FormatStatus>("empty");
   const { extract, isExtracting } = useExtractData();
 
-  // ✅ NEW: Sanitize and validate input
   const sanitizeInput = (text: string): string => {
-    // Remove HTML tags
     let clean = text.replace(/<[^>]*>/g, "");
-
-    // Remove script-like patterns
     clean = clean.replace(/(<script|javascript:|onerror=|onclick=)/gi, "");
-
-    // Limit to reasonable order text characters
-    // Allow: letters, numbers, spaces, basic punctuation, Myanmar script
     clean = clean.replace(/[^\w\s,@.\-+()\/\u1000-\u109F]/gi, "");
-
-    // Limit length to prevent DoS
     return clean.slice(0, 1000);
   };
 
-  // ✅ IMPROVED: Better format validation
   const validateFormat = (text: string) => {
     if (!text.trim()) {
       setFormatStatus("empty");
       return;
     }
 
-    // Check for suspicious patterns
     const hasSuspiciousChars = /<|>|{|}|\[|\]|script|function|eval|alert/.test(
       text.toLowerCase()
     );
@@ -75,11 +64,10 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
       return;
     }
 
-    // Check required patterns
     const hasPhone = /(\+?959\d{7,9}|09\d{7,9})/.test(text);
     const hasPrice = /@\s*\d+/.test(text);
-    const hasItems = /\d+\s+[a-zA-Z\u1000-\u109F]+/.test(text); // Include Myanmar script
-    const hasName = /^[a-zA-Z\s\u1000-\u109F]+/.test(text.trim()); // Name at start
+    const hasItems = /\d+\s+[a-zA-Z\u1000-\u109F]+/.test(text);
+    const hasName = /^[a-zA-Z\s\u1000-\u109F]+/.test(text.trim());
 
     if (!hasPhone) {
       setFormatStatus("missing-phone");
@@ -92,7 +80,6 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
     }
   };
 
-  // ✅ NEW: Handle text change with sanitization
   const handleTextChange = (value: string) => {
     const sanitized = sanitizeInput(value);
     setChatText(sanitized);
@@ -103,7 +90,6 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
   const handleSubmit = () => {
     if (!chatText.trim()) return;
 
-    // Final validation before extraction
     if (formatStatus === "invalid-format") {
       return;
     }
@@ -150,7 +136,6 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
     }
   };
 
-  // ✅ UPDATED: Better validation messages
   const getValidationMessage = () => {
     switch (formatStatus) {
       case "good":
@@ -197,38 +182,56 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
       transition={{ duration: 0.5 }}
       className="w-full"
     >
-      <Card className="w-full max-w-2xl mx-auto bg-white shadow-lg border-slate-200">
-        <CardHeader className="space-y-1 px-4 sm:px-6 pt-5 sm:pt-6">
+      {/* ✅ CHANGED: Increased max-width from max-w-2xl to max-w-3xl */}
+      <Card className="w-full max-w-3xl mx-auto bg-white/95 backdrop-blur-sm shadow-xl border-slate-200">
+        <CardHeader className="space-y-1 px-4 sm:px-6 lg:px-8 pt-5 sm:pt-6 lg:pt-8">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-              <span>Paste Order Message</span>
-            </CardTitle>
-
-            <button
-              onClick={() => setShowHelp(!showHelp)}
-              className="flex items-center gap-1.5 text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
             >
-              <HelpCircle className="w-4 h-4" />
+              <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-blue-600" />
+                <span>Paste Order Message</span>
+              </CardTitle>
+            </motion.div>
+
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowHelp(!showHelp)}
+              className="flex items-center gap-1.5 text-xs sm:text-sm lg:text-base text-blue-600 hover:text-blue-700 font-medium transition-colors bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg"
+            >
+              <HelpCircle className="w-4 h-4 lg:w-5 lg:h-5" />
               <span className="hidden sm:inline">Format Help</span>
               {showHelp ? (
                 <ChevronUp className="w-4 h-4" />
               ) : (
                 <ChevronDown className="w-4 h-4" />
               )}
-            </button>
+            </motion.button>
           </div>
 
-          <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-            <Edit3 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-green-800">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2.5 lg:px-4 lg:py-3"
+          >
+            <Edit3 className="w-4 h-4 lg:w-5 lg:h-5 text-green-600 mt-0.5 flex-shrink-0" />
+            <p className="text-xs sm:text-sm lg:text-base text-green-800">
               <span className="font-semibold">Don&apos;t worry!</span> You can
               add, edit, or remove items on the next screen.
             </p>
-          </div>
+          </motion.div>
         </CardHeader>
 
-        <CardContent className="space-y-4 px-4 sm:px-6 pb-5 sm:pb-6">
+        {/* ✅ CHANGED: Increased padding */}
+        <CardContent className="space-y-4 lg:space-y-5 px-4 sm:px-6 lg:px-8 pb-5 sm:pb-6 lg:pb-8">
           {/* Format Guide */}
           <AnimatePresence>
             {showHelp && (
@@ -239,58 +242,65 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden"
               >
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm font-semibold text-blue-900 mb-2">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 lg:p-6">
+                  <p className="text-xs sm:text-sm lg:text-base font-semibold text-blue-900 mb-3">
                     📝 Format Guide:
                   </p>
-                  <code className="text-xs text-blue-800 bg-blue-100 px-2 py-1 rounded block mb-3">
+                  <code className="text-xs sm:text-sm lg:text-base text-blue-800 bg-blue-100 px-3 py-2 rounded block mb-4">
                     Name, Phone, Qty Item @ Price and Qty Item @ Price, City
                   </code>
 
-                  <div className="bg-white rounded p-2 mb-3">
-                    <p className="text-xs text-blue-700 mb-1 font-medium">
+                  <div className="bg-white rounded-lg p-3 lg:p-4 mb-4">
+                    <p className="text-xs sm:text-sm lg:text-base text-blue-700 mb-2 font-medium">
                       Example:
                     </p>
-                    <p className="text-xs sm:text-sm text-slate-700 font-mono">
+                    <p className="text-xs sm:text-sm lg:text-base text-slate-700 font-mono">
                       Mg Mg, 09123456789, 2 shirts @ 15000 and 3 bags @ 10000,
                       Yangon
                     </p>
                   </div>
 
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={copyTemplate}
-                    className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    className="flex items-center gap-2 text-xs sm:text-sm lg:text-base text-blue-600 hover:text-blue-700 font-medium bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-lg transition-colors"
                   >
                     {copied ? (
                       <>
-                        <Check className="w-3 h-3" />
+                        <Check className="w-4 h-4" />
                         Copied!
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3 h-3" />
+                        <Copy className="w-4 h-4" />
                         Copy Example
                       </>
                     )}
-                  </button>
+                  </motion.button>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Input Area */}
-          <div className="relative space-y-2">
+          {/* Input Area - ✅ CHANGED: Increased rows for desktop */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="relative space-y-2"
+          >
             <Textarea
               placeholder="Example: Mg Mg, 09123456789, 2 shirts @ 15000 and 3 bags @ 10000, Yangon"
               value={chatText}
               onChange={(e) => handleTextChange(e.target.value)}
-              rows={6}
+              rows={8} // ✅ Increased from 6 to 8
               maxLength={1000}
-              className="resize-none bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20 text-sm sm:text-base"
+              className="resize-none bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20 text-sm sm:text-base lg:text-lg transition-all"
             />
 
             {/* Character count */}
-            <div className="flex justify-between items-center text-xs text-slate-500">
+            <div className="flex justify-between items-center text-xs sm:text-sm text-slate-500">
               <span>Plain text only (no HTML/code)</span>
               <span>{chatText.length}/1000</span>
             </div>
@@ -302,29 +312,29 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
-                  className={`flex items-center gap-1.5 text-xs px-2 py-1.5 rounded-md border ${validation.className}`}
+                  className={`flex items-center gap-2 text-xs sm:text-sm px-3 py-2 lg:py-2.5 rounded-lg border ${validation.className}`}
                 >
                   {validation.icon}
                   <span>{validation.text}</span>
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </motion.div>
 
           {/* Extraction Preview */}
           <AnimatePresence>
             {showPreview && previewData && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
+                initial={{ height: 0, opacity: 0, scale: 0.95 }}
+                animate={{ height: "auto", opacity: 1, scale: 1 }}
+                exit={{ height: 0, opacity: 0, scale: 0.95 }}
                 className="overflow-hidden"
               >
                 {previewData.items.length > 0 ? (
-                  <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-3 lg:px-4 lg:py-3.5">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-green-800">
+                      <p className="text-xs sm:text-sm lg:text-base text-green-800">
                         <span className="font-semibold">Found:</span>{" "}
                         {previewData.customerName || "No name"},{" "}
                         {previewData.phone || "No phone"},{" "}
@@ -334,10 +344,10 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
-                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-3 lg:px-4 lg:py-3.5">
+                    <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-amber-800">
+                      <p className="text-xs sm:text-sm lg:text-base text-amber-800">
                         <span className="font-semibold">No items found.</span>{" "}
                         Check your format or click &quot;Format Help&quot;
                         above.
@@ -350,16 +360,26 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
           </AnimatePresence>
 
           {/* Pro Tip */}
-          <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            <Crown className="w-4 h-4 flex-shrink-0" />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-center gap-2 text-xs sm:text-sm lg:text-base text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 lg:px-4 lg:py-3"
+          >
+            <Crown className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
             <p>
               <span className="font-semibold">Premium:</span> Paste any messy
               format with AI extraction
             </p>
-          </div>
+          </motion.div>
 
           {/* Submit Buttons */}
-          <div className="space-y-2">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="space-y-2 lg:space-y-3"
+          >
             {!showPreview ? (
               <motion.div
                 whileHover={{ scale: 1.01 }}
@@ -372,42 +392,61 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
                     isExtracting ||
                     formatStatus === "invalid-format"
                   }
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-5 sm:py-6 text-sm sm:text-base shadow-md disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-5 sm:py-6 lg:py-7 text-sm sm:text-base lg:text-lg shadow-lg disabled:opacity-50 transition-all"
                 >
                   {isExtracting ? (
                     <>
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                      >
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 mr-2" />
+                      </motion.div>
                       Extracting...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 mr-2" />
                       Extract & Preview
                     </>
                   )}
                 </Button>
               </motion.div>
             ) : (
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowPreview(false)}
-                  className="text-sm py-5 sm:py-6"
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  Edit Again
-                </Button>
-                <Button
-                  onClick={confirmExtract}
-                  disabled={!previewData || previewData.items.length === 0}
-                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold text-sm py-5 sm:py-6"
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowPreview(false)}
+                    className="w-full text-sm sm:text-base lg:text-lg py-5 sm:py-6 lg:py-7 border-2"
+                  >
+                    Edit Again
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                  <span className="hidden xs:inline">Continue to Edit</span>
-                  <span className="xs:hidden">Continue</span>
-                </Button>
+                  <Button
+                    onClick={confirmExtract}
+                    disabled={!previewData || previewData.items.length === 0}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold text-sm sm:text-base lg:text-lg py-5 sm:py-6 lg:py-7 shadow-lg"
+                  >
+                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 mr-1.5" />
+                    <span className="hidden xs:inline">Continue to Edit</span>
+                    <span className="xs:hidden">Continue</span>
+                  </Button>
+                </motion.div>
               </div>
             )}
-          </div>
+          </motion.div>
         </CardContent>
       </Card>
     </motion.div>
