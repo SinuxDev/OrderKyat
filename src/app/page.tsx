@@ -4,61 +4,91 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ChatPasteForm from "@/components/organisms/ChatPasteForm";
 import InvoiceForm from "@/components/organisms/InvoiceForm";
+import InvoicePDFPreview from "@/components/organisms/InvoicePDFPreview";
+import StoreSettings from "@/components/organisms/StoreSettings";
 import AnimatedLogo from "@/components/atoms/AnimatedLogo";
 import { ExtractedData } from "@/types/invoice";
+import { StoreInfo } from "@/components/organisms/StoreSettings";
 import { FileText, Zap, Shield } from "lucide-react";
 
 export default function Home() {
-  const [step, setStep] = useState<"paste" | "review">("paste");
+  const [step, setStep] = useState<"paste" | "review" | "preview">("paste");
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(
     null
   );
+  const [showSettings, setShowSettings] = useState(false);
+
+  const [storeInfo, setStoreInfo] = useState<StoreInfo>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("orderkyat-store-info");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (error) {
+          console.error("Failed to parse store info:", error);
+        }
+      }
+    }
+
+    return {
+      name: "",
+      phone: "",
+      address: "",
+    };
+  });
 
   const handleExtract = (data: ExtractedData) => {
     setExtractedData(data);
     setStep("review");
   };
 
-  const handleGenerate = async (data: ExtractedData) => {
-    try {
-      const response = await fetch("/api/generate-pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+  const handleGenerate = async (data: ExtractedData, storeInfo: StoreInfo) => {
+    console.log("🔍 Received in page.tsx:", { data, storeInfo });
+    setExtractedData(data);
+    setStoreInfo(storeInfo);
+    setStep("preview");
+  };
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `invoice-${Date.now()}.pdf`;
-      a.click();
-
-      const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-
-      invoices.push({
-        ...data,
-        id: Date.now().toString(),
-        date: new Date().toISOString(),
-      });
-
-      localStorage.setItem("invoices", JSON.stringify(invoices));
-
-      setStep("paste");
-      setExtractedData(null);
-    } catch (error) {
-      console.error("Failed to generate PDF:", error);
-    }
+  const handleStoreInfoSave = (info: StoreInfo) => {
+    setStoreInfo(info);
+    setShowSettings(false);
   };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
+      {/* ❌ REMOVED - Settings button now in PageHeader */}
+
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowSettings(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <StoreSettings
+                onSave={handleStoreInfoSave}
+                initialData={storeInfo}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Subtle background pattern */}
       <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] pointer-events-none" />
 
       {/* Main content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Hero Section - Only show on paste step */}
+        {/* Hero Section */}
         <AnimatePresence mode="wait">
           {step === "paste" && (
             <motion.div
@@ -68,12 +98,10 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className="text-center mb-8 sm:mb-12"
             >
-              {/* Animated Logo */}
               <div className="mb-4 sm:mb-6">
                 <AnimatedLogo />
               </div>
 
-              {/* Subtitle with Myanmar Flag */}
               <motion.p
                 className="text-lg sm:text-xl md:text-2xl text-slate-700 mb-2 sm:mb-3 font-semibold px-4"
                 initial={{ opacity: 0 }}
@@ -93,7 +121,6 @@ export default function Home() {
                 Transform chat messages into professional PDF invoices instantly
               </motion.p>
 
-              {/* Feature badges */}
               <motion.div
                 className="flex flex-wrap justify-center gap-3 sm:gap-4 px-4"
                 initial={{ opacity: 0, y: 10 }}
@@ -113,9 +140,7 @@ export default function Home() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.5 + index * 0.1 }}
                   >
-                    <feature.icon
-                      className={`w-4 h-4 sm:w-5 sm:h-5 text-${feature.color}-600`}
-                    />
+                    <feature.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="text-xs sm:text-sm text-slate-700 font-medium">
                       {feature.text}
                     </span>
@@ -134,7 +159,6 @@ export default function Home() {
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 50 }}
-              transition={{ type: "spring", stiffness: 100, damping: 20 }}
               className="flex justify-center"
             >
               <ChatPasteForm onExtract={handleExtract} />
@@ -147,12 +171,29 @@ export default function Home() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
-              transition={{ type: "spring", stiffness: 100, damping: 20 }}
-              className="flex justify-center"
+              className="fixed inset-0 z-50 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50"
             >
               <InvoiceForm
                 initialData={extractedData}
                 onGenerate={handleGenerate}
+                onBack={() => setStep("paste")} // ← Add back handler
+                onSettings={() => setShowSettings(true)} // ← Add settings handler
+              />
+            </motion.div>
+          )}
+
+          {step === "preview" && extractedData && (
+            <motion.div
+              key="preview"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 bg-white"
+            >
+              <InvoicePDFPreview
+                data={extractedData}
+                storeInfo={storeInfo}
+                onBack={() => setStep("review")}
               />
             </motion.div>
           )}

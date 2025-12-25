@@ -5,21 +5,17 @@ export interface InvoiceItem {
   price: number;
 }
 
-export interface Invoice {
-  id: string;
-  customerName: string;
-  phone: string;
-  address: string;
-  items: InvoiceItem[];
-  totalPrice: number;
-  date: string;
-  status: "draft" | "completed";
-}
-
 export interface ExtractedData {
   customerName: string;
   phone: string;
   address: string;
   items: InvoiceItem[];
   totalPrice: number;
+}
+
+export interface StoreInfo {
+  name: string;
+  phone: string;
+  address: string;
+  logo?: string;
 }
