@@ -34,7 +34,7 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
     >
       <Card className="w-full max-w-2xl mx-auto bg-white shadow-lg border-slate-200">
         <CardHeader className="space-y-1 px-4 sm:px-6 pt-5 sm:pt-6">
-          <CardTitle className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <CardTitle className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2 font-[family-name:var(--font-geist-sans)]">
             <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             <span>Paste Order Message</span>
           </CardTitle>

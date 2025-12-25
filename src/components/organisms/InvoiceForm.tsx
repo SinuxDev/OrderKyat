@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExtractedData, InvoiceItem } from "@/types/invoice";
 import { motion } from "framer-motion";
-import { Download, Trash2 } from "lucide-react";
+import { Download } from "lucide-react";
 
 interface InvoiceFormProps {
   initialData: ExtractedData;
@@ -53,7 +53,7 @@ export default function InvoiceForm({
     >
       <Card className="w-full max-w-2xl mx-auto bg-white shadow-lg border-slate-200">
         <CardHeader className="space-y-1 px-4 sm:px-6 pt-5 sm:pt-6">
-          <CardTitle className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <CardTitle className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2 font-[family-name:var(--font-geist-sans)]">
             <Download className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
             <span>Review & Edit Invoice</span>
           </CardTitle>
