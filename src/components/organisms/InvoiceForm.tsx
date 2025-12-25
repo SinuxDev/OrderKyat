@@ -78,6 +78,27 @@ export default function InvoiceForm({
     setStoreInfo((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handlePhoneChange = (value: string, field: "phone" | "storePhone") => {
+    const cleaned = value.replace(/[^\d\s+\-()]/g, "");
+
+    if (field === "phone") {
+      updateField("phone", cleaned);
+    } else {
+      updateStoreInfo("phone", cleaned);
+    }
+  };
+
+  const handleNumberInput = (
+    id: string,
+    field: "quantity" | "price",
+    value: string
+  ) => {
+    const numValue = parseInt(value) || 0;
+    if (numValue >= 0) {
+      updateItem(id, field, numValue);
+    }
+  };
+
   const updateItem = (
     id: string,
     field: keyof InvoiceItem,
@@ -260,7 +281,7 @@ export default function InvoiceForm({
   };
 
   return (
-    <>
+    <div className="flex flex-col h-screen overflow-hidden bg-slate-50">
       {/* ✅ Header - Hide Generate button on mobile */}
       <PageHeader
         showBack={true}
@@ -334,221 +355,227 @@ export default function InvoiceForm({
       />
 
       {/* ✅ Form Content - With bottom padding for mobile button */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex-1 w-full pb-20 sm:pb-6 px-4 sm:px-6" // ✅ Extra padding for mobile button
-      >
-        <Card className="w-full max-w-2xl mx-auto bg-white shadow-lg border-slate-200 mt-4 sm:mt-6">
-          <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6 py-5 sm:py-6">
-            {/* Customer Info Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                <Sparkles className="w-4 h-4 text-green-600" />
-                <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">
-                  Customer Details
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="space-y-2">
-                  <Label className="text-slate-700 text-sm">
-                    Customer Name
-                  </Label>
-                  <Input
-                    value={formData.customerName}
-                    onChange={(e) =>
-                      updateField("customerName", e.target.value)
-                    }
-                    placeholder="Enter customer name"
-                    className="bg-slate-50 border-slate-300 text-slate-900 focus:border-green-500 focus:ring-green-500/20 text-sm sm:text-base"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-slate-700 text-sm">Phone</Label>
-                  <Input
-                    value={formData.phone}
-                    onChange={(e) => updateField("phone", e.target.value)}
-                    placeholder="+95 9 XXX XXX XXX"
-                    className="bg-slate-50 border-slate-300 text-slate-900 focus:border-green-500 focus:ring-green-500/20 text-sm sm:text-base"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-slate-700 text-sm">Address</Label>
-                <Input
-                  value={formData.address}
-                  onChange={(e) => updateField("address", e.target.value)}
-                  placeholder="Customer address"
-                  className="bg-slate-50 border-slate-300 text-slate-900 focus:border-green-500 focus:ring-green-500/20 text-sm sm:text-base"
-                />
-              </div>
-            </div>
-
-            {/* Items Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                <div className="flex items-center gap-2">
+      <div className="flex-1 overflow-y-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full pb-24 sm:pb-6 px-4 sm:px-6 py-4" // ✅ Extra padding for mobile button
+        >
+          <Card className="w-full max-w-2xl mx-auto bg-white shadow-lg border-slate-200 mt-4 sm:mt-6">
+            <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6 py-5 sm:py-6">
+              {/* Customer Info Section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
                   <Sparkles className="w-4 h-4 text-green-600" />
                   <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">
-                    Invoice Items
+                    Customer Details
                   </h2>
-                  <span className="text-xs text-slate-500">
-                    ({formData.items.length})
-                  </span>
                 </div>
-                <Button
-                  type="button"
-                  onClick={addNewItem}
-                  size="sm"
-                  variant="outline"
-                  className="text-xs text-blue-600 border-blue-600 hover:bg-blue-50"
-                >
-                  <Plus className="w-3 h-3 mr-1" />
-                  Add Item
-                </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 text-sm">
+                      Customer Name
+                    </Label>
+                    <Input
+                      value={formData.customerName}
+                      onChange={(e) =>
+                        updateField("customerName", e.target.value)
+                      }
+                      placeholder="Enter customer name"
+                      className="bg-slate-50 border-slate-300 text-slate-900 focus:border-green-500 focus:ring-green-500/20 text-sm sm:text-base"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 text-sm">Phone</Label>
+                    <Input
+                      value={formData.phone}
+                      onChange={(e) =>
+                        handlePhoneChange(e.target.value, "phone")
+                      }
+                      placeholder="+95 9 XXX XXX XXX"
+                      className="bg-slate-50 border-slate-300 text-slate-900 focus:border-green-500 focus:ring-green-500/20 text-sm sm:text-base"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-700 text-sm">Address</Label>
+                  <Input
+                    value={formData.address}
+                    onChange={(e) => updateField("address", e.target.value)}
+                    placeholder="Customer address"
+                    className="bg-slate-50 border-slate-300 text-slate-900 focus:border-green-500 focus:ring-green-500/20 text-sm sm:text-base"
+                  />
+                </div>
               </div>
 
-              {formData.items.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
-                  <Plus className="w-10 h-10 mx-auto mb-3 text-slate-400" />
-                  <p className="text-sm font-medium mb-1">No items yet</p>
-                  <p className="text-xs text-slate-400">
-                    Click &quot;Add Item&quot; to start building your invoice
-                  </p>
-                </div>
-              ) : (
-                formData.items.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    className="space-y-2"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ delay: index * 0.05 }}
+              {/* Items Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-green-600" />
+                    <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wide">
+                      Invoice Items
+                    </h2>
+                    <span className="text-xs text-slate-500">
+                      ({formData.items.length})
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={addNewItem}
+                    size="sm"
+                    variant="outline"
+                    className="text-xs text-blue-600 border-blue-600 hover:bg-blue-50"
                   >
-                    {/* Mobile: Stack vertically */}
-                    <div className="sm:hidden space-y-2 p-3 bg-slate-50 rounded-lg border border-slate-200 relative">
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="absolute top-2 right-2 p-1.5 text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                        title="Remove item"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add Item
+                  </Button>
+                </div>
 
-                      <Input
-                        placeholder="Item name"
-                        value={item.name}
-                        onChange={(e) =>
-                          updateItem(item.id, "name", e.target.value)
-                        }
-                        className="bg-white border-slate-300 text-slate-900 text-sm pr-10"
-                      />
-                      <div className="grid grid-cols-2 gap-2">
+                {formData.items.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
+                    <Plus className="w-10 h-10 mx-auto mb-3 text-slate-400" />
+                    <p className="text-sm font-medium mb-1">No items yet</p>
+                    <p className="text-xs text-slate-400">
+                      Click &quot;Add Item&quot; to start building your invoice
+                    </p>
+                  </div>
+                ) : (
+                  formData.items.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      className="space-y-2"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      {/* Mobile: Stack vertically */}
+                      <div className="sm:hidden space-y-2 p-3 bg-slate-50 rounded-lg border border-slate-200 relative">
+                        {/* ✅ Trash button - Better positioned */}
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-medium text-slate-600">
+                            Item {index + 1}
+                          </span>
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="p-1.5 text-red-600 hover:bg-red-100 rounded-md transition-colors"
+                            title="Remove item"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <Input
+                          placeholder="Item name"
+                          value={item.name}
+                          onChange={(e) =>
+                            updateItem(item.id, "name", e.target.value)
+                          }
+                          className="bg-white border-slate-300 text-slate-900 text-sm"
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input
+                            type="number"
+                            placeholder="Qty"
+                            value={item.quantity}
+                            onChange={(e) =>
+                              handleNumberInput(
+                                item.id,
+                                "quantity",
+                                e.target.value
+                              )
+                            }
+                            className="bg-white border-slate-300 text-slate-900 text-sm"
+                          />
+                          <Input
+                            type="number"
+                            placeholder="Price"
+                            value={item.price}
+                            onChange={(e) =>
+                              handleNumberInput(
+                                item.id,
+                                "price",
+                                e.target.value
+                              )
+                            }
+                            className="bg-white border-slate-300 text-slate-900 text-sm"
+                          />
+                        </div>
+                        <div className="flex justify-between items-center pt-1 border-t border-slate-200">
+                          <span className="text-xs text-slate-600">
+                            Subtotal:
+                          </span>
+                          <span className="text-sm font-semibold text-slate-900">
+                            {(item.quantity * item.price).toLocaleString()} Ks
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Desktop: Grid layout */}
+                      <div className="hidden sm:grid grid-cols-12 gap-2 items-center">
+                        <Input
+                          placeholder="Item name"
+                          value={item.name}
+                          onChange={(e) =>
+                            updateItem(item.id, "name", e.target.value)
+                          }
+                          className="col-span-4 bg-slate-50 border-slate-300 text-slate-900 text-sm"
+                        />
                         <Input
                           type="number"
                           placeholder="Qty"
                           value={item.quantity}
                           onChange={(e) =>
-                            updateItem(
+                            handleNumberInput(
                               item.id,
                               "quantity",
-                              parseInt(e.target.value) || 0
+                              e.target.value
                             )
                           }
-                          className="bg-white border-slate-300 text-slate-900 text-sm"
+                          className="col-span-2 bg-slate-50 border-slate-300 text-slate-900 text-sm"
                         />
                         <Input
                           type="number"
                           placeholder="Price"
                           value={item.price}
                           onChange={(e) =>
-                            updateItem(
-                              item.id,
-                              "price",
-                              parseInt(e.target.value) || 0
-                            )
+                            updateItem(item.id, "price", e.target.value)
                           }
-                          className="bg-white border-slate-300 text-slate-900 text-sm"
+                          className="col-span-3 bg-slate-50 border-slate-300 text-slate-900 text-sm"
                         />
+                        <div className="col-span-2 flex items-center justify-end">
+                          <span className="text-sm font-medium text-slate-700">
+                            {(item.quantity * item.price).toLocaleString()} Ks
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="col-span-1 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-                      <div className="flex justify-between items-center pt-1 border-t border-slate-200">
-                        <span className="text-xs text-slate-600">
-                          Subtotal:
-                        </span>
-                        <span className="text-sm font-semibold text-slate-900">
-                          {(item.quantity * item.price).toLocaleString()} Ks
-                        </span>
-                      </div>
-                    </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
 
-                    {/* Desktop: Grid layout */}
-                    <div className="hidden sm:grid grid-cols-12 gap-2 items-center">
-                      <Input
-                        placeholder="Item name"
-                        value={item.name}
-                        onChange={(e) =>
-                          updateItem(item.id, "name", e.target.value)
-                        }
-                        className="col-span-4 bg-slate-50 border-slate-300 text-slate-900 text-sm"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Qty"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateItem(
-                            item.id,
-                            "quantity",
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="col-span-2 bg-slate-50 border-slate-300 text-slate-900 text-sm"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Price"
-                        value={item.price}
-                        onChange={(e) =>
-                          updateItem(
-                            item.id,
-                            "price",
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="col-span-3 bg-slate-50 border-slate-300 text-slate-900 text-sm"
-                      />
-                      <div className="col-span-2 flex items-center justify-end">
-                        <span className="text-sm font-medium text-slate-700">
-                          {(item.quantity * item.price).toLocaleString()} Ks
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="col-span-1 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Remove item"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </motion.div>
-                ))
-              )}
-            </div>
-
-            {/* Total */}
-            <div className="flex justify-between items-center pt-4 border-t-2 border-slate-300">
-              <span className="text-base sm:text-lg font-bold text-slate-900">
-                Total Amount:
-              </span>
-              <span className="text-xl sm:text-2xl font-bold text-green-600">
-                {calculateTotal().toLocaleString()} Ks
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+              {/* Total */}
+              <div className="flex justify-between items-center pt-4 border-t-2 border-slate-300">
+                <span className="text-base sm:text-lg font-bold text-slate-900">
+                  Total Amount:
+                </span>
+                <span className="text-xl sm:text-2xl font-bold text-green-600">
+                  {calculateTotal().toLocaleString()} Ks
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
 
       {/* ✅ Fixed Mobile Generate Button - Outside Card */}
       <div className="fixed bottom-0 left-0 right-0 sm:hidden bg-white border-t border-slate-200 p-3 shadow-lg z-20">
@@ -604,7 +631,7 @@ export default function InvoiceForm({
                       <Input
                         value={storeInfo.phone}
                         onChange={(e) =>
-                          updateStoreInfo("phone", e.target.value)
+                          handlePhoneChange(e.target.value, "storePhone")
                         }
                         placeholder="+95 9 XXX XXX XXX"
                         className="text-sm"
@@ -669,6 +696,6 @@ export default function InvoiceForm({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

@@ -46,6 +46,11 @@ export default function StoreSettings({
     };
   });
 
+  const handlePhoneChange = (value: string) => {
+    const cleaned = value.replace(/[^\d\s+\-()]/g, "");
+    setStoreInfo({ ...storeInfo, phone: cleaned });
+  };
+
   const handleSave = () => {
     localStorage.setItem("orderkyat-store-info", JSON.stringify(storeInfo));
     onSave(storeInfo);
@@ -61,33 +66,50 @@ export default function StoreSettings({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label>Store Name</Label>
+          <Label htmlFor="store-name">Store Name</Label>
           <Input
+            id="store-name"
             value={storeInfo.name}
             onChange={(e) =>
               setStoreInfo({ ...storeInfo, name: e.target.value })
             }
+            placeholder="Your Store Name"
+            maxLength={50}
           />
         </div>
+
         <div className="space-y-2">
-          <Label>Phone</Label>
+          <Label htmlFor="store-phone">Phone</Label>
           <Input
+            id="store-phone"
+            type="tel"
             value={storeInfo.phone}
-            onChange={(e) =>
-              setStoreInfo({ ...storeInfo, phone: e.target.value })
-            }
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            placeholder="+95 9 XXX XXX XXX"
+            maxLength={20}
           />
+          <p className="text-xs text-slate-500">
+            Only numbers and + - ( ) allowed
+          </p>
         </div>
+
         <div className="space-y-2">
-          <Label>Address</Label>
+          <Label htmlFor="store-address">Address</Label>
           <Input
+            id="store-address"
             value={storeInfo.address}
             onChange={(e) =>
               setStoreInfo({ ...storeInfo, address: e.target.value })
             }
+            placeholder="Your Store Address"
+            maxLength={100}
           />
         </div>
-        <Button onClick={handleSave} className="w-full">
+
+        <Button
+          onClick={handleSave}
+          className="w-full bg-green-600 hover:bg-green-700"
+        >
           <Save className="w-4 h-4 mr-2" />
           Save Store Info
         </Button>

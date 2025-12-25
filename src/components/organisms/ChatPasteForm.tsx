@@ -19,6 +19,7 @@ import {
   Edit3,
   AlertCircle,
   CheckCircle2,
+  ShieldAlert,
 } from "lucide-react";
 
 interface ChatPasteFormProps {
@@ -31,7 +32,7 @@ type FormatStatus =
   | "warning"
   | "missing-phone"
   | "missing-items"
-  | "missing-price";
+  | "invalid-format";
 
 export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
   const [chatText, setChatText] = useState("");
@@ -42,30 +43,70 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
   const [formatStatus, setFormatStatus] = useState<FormatStatus>("empty");
   const { extract, isExtracting } = useExtractData();
 
-  // NEW: Real-time format validation
+  // ✅ NEW: Sanitize and validate input
+  const sanitizeInput = (text: string): string => {
+    // Remove HTML tags
+    let clean = text.replace(/<[^>]*>/g, "");
+
+    // Remove script-like patterns
+    clean = clean.replace(/(<script|javascript:|onerror=|onclick=)/gi, "");
+
+    // Limit to reasonable order text characters
+    // Allow: letters, numbers, spaces, basic punctuation, Myanmar script
+    clean = clean.replace(/[^\w\s,@.\-+()\/\u1000-\u109F]/gi, "");
+
+    // Limit length to prevent DoS
+    return clean.slice(0, 1000);
+  };
+
+  // ✅ IMPROVED: Better format validation
   const validateFormat = (text: string) => {
     if (!text.trim()) {
       setFormatStatus("empty");
       return;
     }
 
+    // Check for suspicious patterns
+    const hasSuspiciousChars = /<|>|{|}|\[|\]|script|function|eval|alert/.test(
+      text.toLowerCase()
+    );
+    if (hasSuspiciousChars) {
+      setFormatStatus("invalid-format");
+      return;
+    }
+
+    // Check required patterns
     const hasPhone = /(\+?959\d{7,9}|09\d{7,9})/.test(text);
     const hasPrice = /@\s*\d+/.test(text);
-    const hasItems = /\d+\s+[a-zA-Z]+/.test(text);
+    const hasItems = /\d+\s+[a-zA-Z\u1000-\u109F]+/.test(text); // Include Myanmar script
+    const hasName = /^[a-zA-Z\s\u1000-\u109F]+/.test(text.trim()); // Name at start
 
     if (!hasPhone) {
       setFormatStatus("missing-phone");
     } else if (!hasItems || !hasPrice) {
       setFormatStatus("missing-items");
-    } else if (hasPhone && hasPrice && hasItems) {
+    } else if (hasPhone && hasPrice && hasItems && hasName) {
       setFormatStatus("good");
     } else {
       setFormatStatus("warning");
     }
   };
 
+  // ✅ NEW: Handle text change with sanitization
+  const handleTextChange = (value: string) => {
+    const sanitized = sanitizeInput(value);
+    setChatText(sanitized);
+    validateFormat(sanitized);
+    setShowPreview(false);
+  };
+
   const handleSubmit = () => {
     if (!chatText.trim()) return;
+
+    // Final validation before extraction
+    if (formatStatus === "invalid-format") {
+      return;
+    }
 
     const data = extract(chatText);
 
@@ -109,7 +150,7 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
     }
   };
 
-  // NEW: Get validation message
+  // ✅ UPDATED: Better validation messages
   const getValidationMessage = () => {
     switch (formatStatus) {
       case "good":
@@ -117,6 +158,12 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
           icon: <CheckCircle2 className="w-3.5 h-3.5" />,
           text: "Format looks good!",
           className: "text-green-600 bg-green-50 border-green-200",
+        };
+      case "invalid-format":
+        return {
+          icon: <ShieldAlert className="w-3.5 h-3.5" />,
+          text: "Invalid characters detected. Please use plain text orders only.",
+          className: "text-red-600 bg-red-50 border-red-200",
         };
       case "missing-phone":
         return {
@@ -236,17 +283,19 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
             <Textarea
               placeholder="Example: Mg Mg, 09123456789, 2 shirts @ 15000 and 3 bags @ 10000, Yangon"
               value={chatText}
-              onChange={(e) => {
-                const newText = e.target.value;
-                setChatText(newText);
-                validateFormat(newText); // Real-time validation
-                setShowPreview(false);
-              }}
+              onChange={(e) => handleTextChange(e.target.value)}
               rows={6}
+              maxLength={1000}
               className="resize-none bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20 text-sm sm:text-base"
             />
 
-            {/* NEW: Real-time format validation indicator */}
+            {/* Character count */}
+            <div className="flex justify-between items-center text-xs text-slate-500">
+              <span>Plain text only (no HTML/code)</span>
+              <span>{chatText.length}/1000</span>
+            </div>
+
+            {/* Real-time format validation indicator */}
             <AnimatePresence>
               {validation && chatText.length > 5 && !showPreview && (
                 <motion.div
@@ -318,8 +367,12 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
               >
                 <Button
                   onClick={handleSubmit}
-                  disabled={!chatText.trim() || isExtracting}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-5 sm:py-6 text-sm sm:text-base shadow-md"
+                  disabled={
+                    !chatText.trim() ||
+                    isExtracting ||
+                    formatStatus === "invalid-format"
+                  }
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-5 sm:py-6 text-sm sm:text-base shadow-md disabled:opacity-50"
                 >
                   {isExtracting ? (
                     <>
@@ -335,27 +388,23 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
                 </Button>
               </motion.div>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setShowPreview(false)}
-                  className="text-sm"
+                  className="text-sm py-5 sm:py-6"
                 >
                   Edit Again
                 </Button>
-                <motion.div
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
+                <Button
+                  onClick={confirmExtract}
+                  disabled={!previewData || previewData.items.length === 0}
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold text-sm py-5 sm:py-6"
                 >
-                  <Button
-                    onClick={confirmExtract}
-                    disabled={!previewData || previewData.items.length === 0}
-                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold text-sm"
-                  >
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Continue to Edit
-                  </Button>
-                </motion.div>
+                  <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                  <span className="hidden xs:inline">Continue to Edit</span>
+                  <span className="xs:hidden">Continue</span>
+                </Button>
               </div>
             )}
           </div>
