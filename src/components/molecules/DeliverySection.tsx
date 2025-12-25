@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Truck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Truck, AlertCircle } from "lucide-react"; // ✅ Add AlertCircle
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,6 +17,7 @@ interface DeliverySectionProps {
   deliveryType?: DeliveryType;
   deliveryFee?: number;
   updateField: (field: string, value: unknown) => void;
+  showError?: boolean; // ✅ NEW: Error state prop
 }
 
 const DELIVERY_OPTIONS: {
@@ -50,6 +51,7 @@ export default function DeliverySection({
   deliveryType,
   deliveryFee,
   updateField,
+  showError = false, // ✅ NEW: Default to false
 }: DeliverySectionProps) {
   const isFreeDelivery =
     deliveryType === "Free Delivery" || deliveryType === "Self Pickup";
@@ -74,6 +76,7 @@ export default function DeliverySection({
 
   return (
     <motion.div
+      id="delivery-section" // ✅ Add ID for scroll target
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
@@ -83,8 +86,28 @@ export default function DeliverySection({
         <Truck className="w-5 h-5 text-blue-600" />
         <h3 className="text-lg sm:text-xl font-bold text-slate-900">
           Delivery Information
+          {/* ✅ Required indicator */}
+          <span className="text-red-500 ml-1">*</span>
         </h3>
       </div>
+
+      {/* ✅ NEW: Error message */}
+      <AnimatePresence>
+        {showError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 text-sm text-red-700"
+          >
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>
+              <strong>Delivery type is required.</strong> Please select a
+              delivery option before generating invoice.
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Delivery Type */}
@@ -93,12 +116,17 @@ export default function DeliverySection({
             htmlFor="deliveryType"
             className="text-sm font-medium text-slate-700"
           >
-            Delivery Type
+            Delivery Type <span className="text-red-500">*</span>{" "}
+            {/* ✅ Required indicator */}
           </Label>
           <Select value={deliveryType} onValueChange={handleDeliveryTypeChange}>
             <SelectTrigger
               id="deliveryType"
-              className="bg-slate-50 border-slate-300 text-slate-900 w-full !h-11 !min-h-11 !max-h-11" // ✅ Force exact height
+              className={`bg-slate-50 text-slate-900 w-full !h-11 !min-h-11 !max-h-11 ${
+                showError && !deliveryType
+                  ? "border-red-300 focus:ring-red-500" // ✅ Red border on error
+                  : "border-slate-300"
+              }`}
             >
               <SelectValue placeholder="Select delivery type" />
             </SelectTrigger>
@@ -131,7 +159,7 @@ export default function DeliverySection({
               isFreeDelivery
                 ? "bg-slate-100 cursor-not-allowed opacity-60"
                 : "bg-slate-50"
-            }`} // ✅ Force exact height
+            }`}
             placeholder={isFreeDelivery ? "Free" : "0"}
           />
         </div>

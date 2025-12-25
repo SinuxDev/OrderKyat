@@ -54,6 +54,7 @@ export default function InvoiceForm({
 
   const { storeInfo, setStoreInfo, updateStoreInfo } = useStoreInfo();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showDeliveryError, setShowDeliveryError] = useState(false);
 
   const [currentTime, setCurrentTime] = useState(() => Date.now());
 
@@ -122,6 +123,13 @@ export default function InvoiceForm({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
+  // ❌ REMOVED: The problematic useEffect
+  // useEffect(() => {
+  //   if (formData.deliveryType && showDeliveryError) {
+  //     setShowDeliveryError(false);
+  //   }
+  // }, [formData.deliveryType, showDeliveryError]);
+
   const handlePhoneChange = (value: string) => {
     const cleaned = value.replace(/[^\d\s+\-()]/g, "");
     updateField("phone", cleaned);
@@ -143,18 +151,42 @@ export default function InvoiceForm({
     }
   };
 
-  // ✅ NEW: Calculate grand total including delivery fee
   const calculateGrandTotal = () => {
     const itemsTotal = calculateTotal();
     const deliveryFee = formData.deliveryFee || 0;
     return itemsTotal + deliveryFee;
   };
 
+  // ✅ UPDATED: Validate and handle error
+  const handleGenerateClick = () => {
+    if (!formData.deliveryType) {
+      setShowDeliveryError(true);
+      document.getElementById("delivery-section")?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      return;
+    }
+
+    // ✅ Clear error if delivery is selected
+    setShowDeliveryError(false);
+    setShowConfirmDialog(true);
+  };
+
+  // ✅ NEW: Handle delivery field updates - clear error when delivery is selected
+  const handleDeliveryUpdate = (field: string, value: unknown) => {
+    updateField(field, value);
+
+    // Clear error when delivery type is selected
+    if (field === "deliveryType" && value && showDeliveryError) {
+      setShowDeliveryError(false);
+    }
+  };
+
   const confirmGenerate = () => {
     localStorage.setItem("orderkyat-store-info", JSON.stringify(storeInfo));
     localStorage.removeItem("orderkyat-invoice-draft");
     setHasUnsavedChanges(false);
-    // ✅ Pass grand total including delivery
     onGenerate(
       {
         ...formData,
@@ -226,7 +258,7 @@ export default function InvoiceForm({
 
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
-                onClick={() => setShowConfirmDialog(true)}
+                onClick={handleGenerateClick}
                 disabled={formData.items.length === 0}
                 size="sm"
                 className="hidden sm:flex bg-green-600 hover:bg-green-700 gap-1.5 shadow-sm h-8 sm:h-9"
@@ -278,21 +310,20 @@ export default function InvoiceForm({
                 removeItem={removeItem}
               />
 
-              {/* ✅ NEW: Delivery Section */}
+              {/* ✅ UPDATED: Use handleDeliveryUpdate instead of updateField */}
               <DeliverySection
                 deliveryType={formData.deliveryType}
                 deliveryFee={formData.deliveryFee}
-                updateField={updateField}
+                updateField={handleDeliveryUpdate} // ✅ Changed
+                showError={showDeliveryError}
               />
 
-              {/* ✅ UPDATED: Show subtotal, delivery, and grand total */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
                 className="space-y-3 pt-6 lg:pt-8 border-t-2 border-slate-300"
               >
-                {/* Subtotal */}
                 <div className="flex justify-between items-center text-slate-700">
                   <span className="text-base sm:text-lg font-medium">
                     Subtotal:
@@ -302,7 +333,6 @@ export default function InvoiceForm({
                   </span>
                 </div>
 
-                {/* Delivery Fee */}
                 {formData.deliveryFee !== undefined &&
                   formData.deliveryFee > 0 && (
                     <div className="flex justify-between items-center text-slate-700">
@@ -316,7 +346,6 @@ export default function InvoiceForm({
                     </div>
                   )}
 
-                {/* Grand Total */}
                 <div className="flex justify-between items-center pt-3 border-t border-slate-200">
                   <span className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900">
                     Total Amount:
@@ -344,7 +373,7 @@ export default function InvoiceForm({
       >
         <motion.div whileTap={{ scale: 0.97 }}>
           <Button
-            onClick={() => setShowConfirmDialog(true)}
+            onClick={handleGenerateClick}
             disabled={formData.items.length === 0}
             className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold h-12 text-base shadow-md"
           >
@@ -361,7 +390,7 @@ export default function InvoiceForm({
         storeInfo={storeInfo}
         updateStoreInfo={updateStoreInfo}
         handleStorePhoneChange={handleStorePhoneChange}
-        calculateTotal={calculateGrandTotal} // ✅ Pass grand total
+        calculateTotal={calculateGrandTotal}
         confirmGenerate={confirmGenerate}
       />
     </div>
