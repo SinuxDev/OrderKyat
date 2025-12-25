@@ -76,21 +76,8 @@ export default function InvoicePDFPreview({
           ))}
       </AnimatePresence>
 
-      {/* Success Badge */}
-      <motion.div
-        initial={{ scale: 0, rotate: -180 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: "spring", duration: 0.6, delay: 0.2 }}
-        className="absolute top-20 right-8 z-40 hidden lg:block"
-      >
-        <motion.div
-          animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className="bg-green-500 text-white rounded-full p-4 shadow-xl"
-        >
-          <CheckCircle className="w-8 h-8" />
-        </motion.div>
-      </motion.div>
+      {/* ❌ DELETED - Old Success Badge that was in top-right corner */}
+      {/* This section has been removed - see lines 83-97 in your original code */}
 
       {/* Header */}
       <PageHeader
@@ -165,16 +152,56 @@ export default function InvoicePDFPreview({
         }
       />
 
-      {/* PDF Preview Area - ✅ BETTER CENTERED & TALLER */}
-      <div className="flex-1 overflow-auto relative z-10">
-        <div className="min-h-full flex items-center justify-center p-4 md:p-8 lg:p-12">
+      {/* PDF Preview Area */}
+      <div className="flex-1 overflow-auto relative z-10 flex items-center justify-center">
+        <div className="w-full p-4 md:p-8 lg:p-12">
           {/* Desktop: Full PDF Viewer */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="hidden md:block w-full max-w-5xl"
+            className="hidden md:block w-full max-w-5xl space-y-6 mx-auto"
           >
+            {/* Success Banner */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 lg:p-5 flex items-center gap-4 shadow-lg"
+            >
+              <motion.div
+                animate={{
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="flex-shrink-0 bg-green-500 text-white rounded-full p-3"
+              >
+                <CheckCircle className="w-6 h-6 lg:w-7 lg:h-7" />
+              </motion.div>
+
+              <div className="flex-1">
+                <h3 className="text-base lg:text-lg font-bold text-green-900">
+                  Invoice Generated Successfully!
+                </h3>
+                <p className="text-xs lg:text-sm text-green-700">
+                  Your invoice is ready to download and share
+                </p>
+              </div>
+
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="flex-shrink-0"
+              >
+                <span className="text-3xl lg:text-4xl">🎉</span>
+              </motion.div>
+            </motion.div>
+
+            {/* PDF Viewer */}
             <motion.div
               className="bg-white shadow-2xl rounded-lg overflow-hidden mx-auto"
               style={{
@@ -197,12 +224,12 @@ export default function InvoicePDFPreview({
             </motion.div>
           </motion.div>
 
-          {/* Mobile: Summary Card */}
+          {/* Mobile: Summary Card - NOW CENTERED */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="md:hidden w-full max-w-md"
+            className="md:hidden w-full max-w-md mx-auto"
           >
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 space-y-6 border border-green-100">
               {/* Success Icon */}
