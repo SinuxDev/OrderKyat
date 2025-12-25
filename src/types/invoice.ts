@@ -1,9 +1,15 @@
 export interface InvoiceItem {
   id: string;
-  name: string;
   quantity: number;
+  name: string;
   price: number;
 }
+
+export type DeliveryType =
+  | "Cash on Delivery"
+  | "Prepaid"
+  | "Self Pickup"
+  | "Free Delivery";
 
 export interface ExtractedData {
   customerName: string;
@@ -11,6 +17,8 @@ export interface ExtractedData {
   address: string;
   items: InvoiceItem[];
   totalPrice: number;
+  deliveryType?: DeliveryType;
+  deliveryFee?: number;
 }
 
 export interface StoreInfo {

@@ -6,11 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ExtractedData } from "@/types/invoice";
 import { StoreInfo } from "@/components/organisms/StoreSettings";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Save, AlertCircle, FileEdit } from "lucide-react";
+import { Download, Save, AlertCircle, FileEdit, Truck } from "lucide-react";
 import PageHeader from "@/components/organisms/PageHeader";
 import SubtleBackground from "@/components/atoms/SubtleBackground";
 import CustomerDetailsSection from "@/components/molecules/CustomerDetailSection";
 import InvoiceItemsSection from "@/components/molecules/InvoiceItemSection";
+import DeliverySection from "@/components/molecules/DeliverySection";
 import GenerateConfirmDialog from "@/components/molecules/GenerateConfirmDialog";
 import {
   useInvoiceForm,
@@ -54,10 +55,8 @@ export default function InvoiceForm({
   const { storeInfo, setStoreInfo, updateStoreInfo } = useStoreInfo();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-  // ✅ NEW: Current time state for "X seconds ago" display
   const [currentTime, setCurrentTime] = useState(() => Date.now());
 
-  // Auto-save hook
   useAutoSave(
     formData,
     hasUnsavedChanges,
@@ -66,10 +65,8 @@ export default function InvoiceForm({
     setIsSaving
   );
 
-  // Draft loader hook
   useDraftLoader(initialData, setFormData, setLastSaved);
 
-  // Keyboard shortcuts hook
   useKeyboardShortcuts(
     formData,
     addNewItem,
@@ -78,16 +75,14 @@ export default function InvoiceForm({
     setHasUnsavedChanges
   );
 
-  // ✅ NEW: Update current time every 10 seconds to refresh "X seconds ago"
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
-    }, 10000); // Update every 10 seconds
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ NEW: Calculate "last saved" text using useMemo (pure function)
   const lastSavedText = useMemo(() => {
     if (!lastSaved) return null;
 
@@ -103,7 +98,6 @@ export default function InvoiceForm({
     return `Saved ${hours}h ago`;
   }, [lastSaved, currentTime]);
 
-  // Reload store info when dialog opens
   useEffect(() => {
     if (showConfirmDialog) {
       const saved = localStorage.getItem("orderkyat-store-info");
@@ -117,7 +111,6 @@ export default function InvoiceForm({
     }
   }, [showConfirmDialog, setStoreInfo]);
 
-  // Warn before leaving with unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges) {
@@ -150,11 +143,25 @@ export default function InvoiceForm({
     }
   };
 
+  // ✅ NEW: Calculate grand total including delivery fee
+  const calculateGrandTotal = () => {
+    const itemsTotal = calculateTotal();
+    const deliveryFee = formData.deliveryFee || 0;
+    return itemsTotal + deliveryFee;
+  };
+
   const confirmGenerate = () => {
     localStorage.setItem("orderkyat-store-info", JSON.stringify(storeInfo));
     localStorage.removeItem("orderkyat-invoice-draft");
     setHasUnsavedChanges(false);
-    onGenerate({ ...formData, totalPrice: calculateTotal() }, storeInfo);
+    // ✅ Pass grand total including delivery
+    onGenerate(
+      {
+        ...formData,
+        totalPrice: calculateGrandTotal(),
+      },
+      storeInfo
+    );
     setShowConfirmDialog(false);
   };
 
@@ -184,7 +191,6 @@ export default function InvoiceForm({
         hideMobileActions={true}
         actions={
           <>
-            {/* ✅ Auto-save indicator using lastSavedText from useMemo */}
             <AnimatePresence>
               {(isSaving || lastSaved) && (
                 <motion.div
@@ -249,7 +255,6 @@ export default function InvoiceForm({
         }
       />
 
-      {/* Form Content */}
       <div className="flex-1 overflow-y-auto relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -273,30 +278,64 @@ export default function InvoiceForm({
                 removeItem={removeItem}
               />
 
+              {/* ✅ NEW: Delivery Section */}
+              <DeliverySection
+                deliveryType={formData.deliveryType}
+                deliveryFee={formData.deliveryFee}
+                updateField={updateField}
+              />
+
+              {/* ✅ UPDATED: Show subtotal, delivery, and grand total */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="flex justify-between items-center pt-6 lg:pt-8 border-t-2 border-slate-300"
+                className="space-y-3 pt-6 lg:pt-8 border-t-2 border-slate-300"
               >
-                <span className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900">
-                  Total Amount:
-                </span>
-                <motion.span
-                  key={calculateTotal()}
-                  initial={{ scale: 1.15, color: "#16a34a" }}
-                  animate={{ scale: 1, color: "#16a34a" }}
-                  className="text-2xl sm:text-3xl lg:text-4xl font-bold"
-                >
-                  {calculateTotal().toLocaleString()} Ks
-                </motion.span>
+                {/* Subtotal */}
+                <div className="flex justify-between items-center text-slate-700">
+                  <span className="text-base sm:text-lg font-medium">
+                    Subtotal:
+                  </span>
+                  <span className="text-lg sm:text-xl font-semibold">
+                    {calculateTotal().toLocaleString()} Ks
+                  </span>
+                </div>
+
+                {/* Delivery Fee */}
+                {formData.deliveryFee !== undefined &&
+                  formData.deliveryFee > 0 && (
+                    <div className="flex justify-between items-center text-slate-700">
+                      <span className="text-base sm:text-lg font-medium flex items-center gap-2">
+                        <Truck className="w-4 h-4" />
+                        Delivery Fee:
+                      </span>
+                      <span className="text-lg sm:text-xl font-semibold">
+                        {formData.deliveryFee.toLocaleString()} Ks
+                      </span>
+                    </div>
+                  )}
+
+                {/* Grand Total */}
+                <div className="flex justify-between items-center pt-3 border-t border-slate-200">
+                  <span className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900">
+                    Total Amount:
+                  </span>
+                  <motion.span
+                    key={calculateGrandTotal()}
+                    initial={{ scale: 1.15, color: "#16a34a" }}
+                    animate={{ scale: 1, color: "#16a34a" }}
+                    className="text-2xl sm:text-3xl lg:text-4xl font-bold"
+                  >
+                    {calculateGrandTotal().toLocaleString()} Ks
+                  </motion.span>
+                </div>
               </motion.div>
             </CardContent>
           </Card>
         </motion.div>
       </div>
 
-      {/* Fixed Mobile Generate Button */}
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
@@ -322,7 +361,7 @@ export default function InvoiceForm({
         storeInfo={storeInfo}
         updateStoreInfo={updateStoreInfo}
         handleStorePhoneChange={handleStorePhoneChange}
-        calculateTotal={calculateTotal}
+        calculateTotal={calculateGrandTotal} // ✅ Pass grand total
         confirmGenerate={confirmGenerate}
       />
     </div>

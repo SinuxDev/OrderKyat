@@ -64,18 +64,98 @@ export const pdfStyles = StyleSheet.create({
   col2: { width: "15%", textAlign: "center" },
   col3: { width: "20%", textAlign: "right" },
   col4: { width: "15%", textAlign: "right" },
-  total: {
+
+  // ✅ NEW: Delivery section styles
+  deliverySection: {
+    marginTop: 15,
+    marginBottom: 15,
+    padding: 12,
+    backgroundColor: "#eff6ff",
+    borderRadius: 4,
+    borderLeft: "3px solid #3b82f6",
+  },
+  deliveryTitle: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: "#1e40af",
+    marginBottom: 6,
+  },
+  deliveryText: {
+    fontSize: 10,
+    color: "#334155",
+    marginBottom: 3,
+  },
+  deliveryBadge: {
+    fontSize: 9,
+    color: "#3b82f6",
+    backgroundColor: "#dbeafe",
+    padding: "4px 8px",
+    borderRadius: 3,
+    marginTop: 4,
+  },
+
+  // ✅ NEW: Summary section (subtotal + delivery + total)
+  summarySection: {
     marginTop: 20,
-    flexDirection: "row",
-    justifyContent: "flex-end",
     paddingTop: 15,
+    borderTop: "1px solid #e2e8f0",
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    paddingHorizontal: 10,
+  },
+  summaryLabel: {
+    fontSize: 11,
+    color: "#64748b",
+  },
+  summaryValue: {
+    fontSize: 11,
+    color: "#334155",
+    fontWeight: "bold",
+  },
+  summaryDeliveryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    paddingHorizontal: 10,
+    backgroundColor: "#f8fafc",
+    padding: 6,
+    borderRadius: 3,
+  },
+  summaryDeliveryLabel: {
+    fontSize: 11,
+    color: "#3b82f6",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  summaryDeliveryValue: {
+    fontSize: 11,
+    color: "#3b82f6",
+    fontWeight: "bold",
+  },
+
+  // ✅ UPDATED: Total section (now grand total)
+  total: {
+    marginTop: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 15,
+    paddingHorizontal: 10,
     borderTop: "2px solid #10b981",
+  },
+  totalLabel: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#1e293b",
   },
   totalText: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#10b981",
   },
+
   footer: {
     position: "absolute",
     bottom: 30,

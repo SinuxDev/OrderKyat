@@ -12,6 +12,14 @@ export default function InvoicePDFDocument({
   data,
   storeInfo,
 }: InvoicePDFDocumentProps) {
+  // ✅ Calculate totals
+  const subtotal = data.items.reduce(
+    (sum, item) => sum + item.quantity * item.price,
+    0
+  );
+  const deliveryFee = data.deliveryFee || 0;
+  const grandTotal = subtotal + deliveryFee;
+
   return (
     <Document>
       <Page size="A4" style={pdfStyles.page}>
@@ -42,8 +50,26 @@ export default function InvoicePDFDocument({
           <Text style={pdfStyles.sectionTitle}>Bill To:</Text>
           <Text style={pdfStyles.text}>{data.customerName}</Text>
           <Text style={pdfStyles.text}>{data.phone}</Text>
-          <Text style={pdfStyles.text}>{data.address}</Text>
+          {data.address && <Text style={pdfStyles.text}>{data.address}</Text>}
         </View>
+
+        {/* ✅ NEW: Delivery Information */}
+        {(data.deliveryType ||
+          (data.deliveryFee !== undefined && data.deliveryFee >= 0)) && (
+          <View style={pdfStyles.deliverySection}>
+            <Text style={pdfStyles.deliveryTitle}>🚚 Delivery Information</Text>
+            {data.deliveryType && (
+              <Text style={pdfStyles.deliveryText}>
+                Type: {data.deliveryType}
+              </Text>
+            )}
+            {data.deliveryFee !== undefined && (
+              <Text style={pdfStyles.deliveryText}>
+                Delivery Fee: {data.deliveryFee.toLocaleString()} Ks
+              </Text>
+            )}
+          </View>
+        )}
 
         {/* Items Table */}
         <View style={pdfStyles.table}>
@@ -68,11 +94,35 @@ export default function InvoicePDFDocument({
           ))}
         </View>
 
-        {/* Total */}
-        <View style={pdfStyles.total}>
-          <Text style={pdfStyles.totalText}>
-            Total: {data.totalPrice.toLocaleString()} Ks
-          </Text>
+        {/* ✅ NEW: Summary Section (Subtotal, Delivery, Total) */}
+        <View style={pdfStyles.summarySection}>
+          {/* Subtotal */}
+          <View style={pdfStyles.summaryRow}>
+            <Text style={pdfStyles.summaryLabel}>Subtotal:</Text>
+            <Text style={pdfStyles.summaryValue}>
+              {subtotal.toLocaleString()} Ks
+            </Text>
+          </View>
+
+          {/* Delivery Fee (only show if > 0) */}
+          {deliveryFee > 0 && (
+            <View style={pdfStyles.summaryDeliveryRow}>
+              <Text style={pdfStyles.summaryDeliveryLabel}>
+                🚚 Delivery Fee:
+              </Text>
+              <Text style={pdfStyles.summaryDeliveryValue}>
+                {deliveryFee.toLocaleString()} Ks
+              </Text>
+            </View>
+          )}
+
+          {/* Grand Total */}
+          <View style={pdfStyles.total}>
+            <Text style={pdfStyles.totalLabel}>Total Amount:</Text>
+            <Text style={pdfStyles.totalText}>
+              {grandTotal.toLocaleString()} Ks
+            </Text>
+          </View>
         </View>
 
         {/* Footer */}
