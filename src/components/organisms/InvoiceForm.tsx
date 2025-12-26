@@ -7,12 +7,11 @@ import { ExtractedData } from "@/types/invoice";
 import { StoreInfo } from "@/components/organisms/StoreSettings";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Save, AlertCircle, FileEdit, Truck } from "lucide-react";
+import dynamic from "next/dynamic";
 import PageHeader from "@/components/organisms/PageHeader";
-import SubtleBackground from "@/components/atoms/SubtleBackground";
 import CustomerDetailsSection from "@/components/molecules/CustomerDetailSection";
 import InvoiceItemsSection from "@/components/molecules/InvoiceItemSection";
 import DeliverySection from "@/components/molecules/DeliverySection";
-import GenerateConfirmDialog from "@/components/molecules/GenerateConfirmDialog";
 import {
   useInvoiceForm,
   useStoreInfo,
@@ -22,6 +21,17 @@ import {
   useKeyboardShortcuts,
   useDraftLoader,
 } from "@/hooks/useInvoiceEffects";
+
+// ✅ Lazy load heavy components
+const SubtleBackground = dynamic(
+  () => import("@/components/atoms/SubtleBackground"),
+  { ssr: false }
+);
+
+const GenerateConfirmDialog = dynamic(
+  () => import("@/components/molecules/GenerateConfirmDialog"),
+  { ssr: false }
+);
 
 interface InvoiceFormProps {
   initialData: ExtractedData;
@@ -55,8 +65,16 @@ export default function InvoiceForm({
   const { storeInfo, setStoreInfo, updateStoreInfo } = useStoreInfo();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showDeliveryError, setShowDeliveryError] = useState(false);
-
+  const [isMobile, setIsMobile] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useAutoSave(
     formData,
@@ -188,32 +206,37 @@ export default function InvoiceForm({
 
   return (
     <div className="flex flex-col h-screen overflow-hidden relative">
-      {/* ✅ ENHANCED: Multi-layer background */}
+      {/* Simplified background for mobile */}
+      {isMobile ? (
+        <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50" />
+      ) : (
+        <>
+          {/* Base gradient */}
+          <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50" />
 
-      {/* Base gradient */}
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50" />
+          {/* Animated blobs - Desktop only */}
+          <div className="fixed inset-0 opacity-30">
+            <div className="absolute top-20 left-20 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
+            <div className="absolute top-20 right-20 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+            <div className="absolute bottom-20 left-1/2 w-96 h-96 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
+          </div>
 
-      {/* ✅ NEW: Subtle animated blobs */}
-      <div className="fixed inset-0 opacity-30">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
-        <div className="absolute top-20 right-20 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
-        <div className="absolute bottom-20 left-1/2 w-96 h-96 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
-      </div>
+          {/* Grid pattern */}
+          <div
+            className="fixed inset-0 opacity-[0.025]"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, rgb(99, 102, 241) 1px, transparent 1px),
+                linear-gradient(to bottom, rgb(99, 102, 241) 1px, transparent 1px)
+              `,
+              backgroundSize: "60px 60px",
+            }}
+          />
 
-      {/* ✅ NEW: Grid pattern */}
-      <div
-        className="fixed inset-0 opacity-[0.025]"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, rgb(99, 102, 241) 1px, transparent 1px),
-            linear-gradient(to bottom, rgb(99, 102, 241) 1px, transparent 1px)
-          `,
-          backgroundSize: "40px 40px",
-        }}
-      />
-
-      {/* ✅ KEEP: SubtleBackground component for additional effects */}
-      <SubtleBackground />
+          {/* SubtleBackground - Desktop only, lazy loaded */}
+          <SubtleBackground />
+        </>
+      )}
 
       <PageHeader
         showBack={true}
@@ -270,7 +293,10 @@ export default function InvoiceForm({
               )}
             </AnimatePresence>
 
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <motion.div
+              whileHover={isMobile ? {} : { scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <Button
                 onClick={handleGenerateClick}
                 disabled={formData.items.length === 0}
@@ -305,7 +331,7 @@ export default function InvoiceForm({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.3 }}
           className="min-h-full w-full pb-24 sm:pb-8 px-4 sm:px-6 lg:px-12 xl:px-16 py-6 lg:py-8 flex justify-center items-center"
         >
           <Card className="w-full max-w-6xl bg-white/95 backdrop-blur-sm shadow-xl border-slate-200">
@@ -334,7 +360,7 @@ export default function InvoiceForm({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.2 }}
                 className="space-y-3 pt-6 lg:pt-8 border-t-2 border-slate-300"
               >
                 <div className="flex justify-between items-center text-slate-700">
@@ -365,7 +391,7 @@ export default function InvoiceForm({
                   </span>
                   <motion.span
                     key={calculateGrandTotal()}
-                    initial={{ scale: 1.15, color: "#16a34a" }}
+                    initial={{ scale: 1.1, color: "#16a34a" }}
                     animate={{ scale: 1, color: "#16a34a" }}
                     className="text-2xl sm:text-3xl lg:text-4xl font-bold"
                   >
@@ -381,7 +407,7 @@ export default function InvoiceForm({
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
+        transition={{ delay: 0.2, type: "spring", stiffness: 120 }}
         className="fixed bottom-0 left-0 right-0 sm:hidden bg-white border-t border-slate-200 p-3 shadow-lg z-20"
       >
         <motion.div whileTap={{ scale: 0.97 }}>
@@ -396,16 +422,19 @@ export default function InvoiceForm({
         </motion.div>
       </motion.div>
 
-      <GenerateConfirmDialog
-        open={showConfirmDialog}
-        onOpenChange={setShowConfirmDialog}
-        formData={formData}
-        storeInfo={storeInfo}
-        updateStoreInfo={updateStoreInfo}
-        handleStorePhoneChange={handleStorePhoneChange}
-        calculateTotal={calculateGrandTotal}
-        confirmGenerate={confirmGenerate}
-      />
+      {/* Only render dialog when opened */}
+      {showConfirmDialog && (
+        <GenerateConfirmDialog
+          open={showConfirmDialog}
+          onOpenChange={setShowConfirmDialog}
+          formData={formData}
+          storeInfo={storeInfo}
+          updateStoreInfo={updateStoreInfo}
+          handleStorePhoneChange={handleStorePhoneChange}
+          calculateTotal={calculateGrandTotal}
+          confirmGenerate={confirmGenerate}
+        />
+      )}
     </div>
   );
 }
