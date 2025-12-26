@@ -187,7 +187,32 @@ export default function InvoiceForm({
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/30 relative">
+    <div className="flex flex-col h-screen overflow-hidden relative">
+      {/* ✅ ENHANCED: Multi-layer background */}
+
+      {/* Base gradient */}
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50" />
+
+      {/* ✅ NEW: Subtle animated blobs */}
+      <div className="fixed inset-0 opacity-30">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
+        <div className="absolute top-20 right-20 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+        <div className="absolute bottom-20 left-1/2 w-96 h-96 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
+      </div>
+
+      {/* ✅ NEW: Grid pattern */}
+      <div
+        className="fixed inset-0 opacity-[0.025]"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgb(99, 102, 241) 1px, transparent 1px),
+            linear-gradient(to bottom, rgb(99, 102, 241) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      {/* ✅ KEEP: SubtleBackground component for additional effects */}
       <SubtleBackground />
 
       <PageHeader

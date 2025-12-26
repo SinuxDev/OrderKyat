@@ -41,7 +41,35 @@ export default function InvoicePDFPreview({
   );
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-br from-green-50 via-emerald-50/30 to-teal-50/30 relative">
+    <div className="flex flex-col h-screen overflow-hidden relative">
+      <div className="fixed inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50" />
+
+      <div className="fixed inset-0 opacity-30">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-green-400/25 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
+        <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-400/25 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+        <div className="absolute bottom-20 left-1/2 w-96 h-96 bg-teal-400/25 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
+      </div>
+
+      <div className="fixed inset-x-0 top-0 h-[500px] bg-gradient-radial from-green-100/40 via-transparent to-transparent" />
+
+      <div
+        className="fixed inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgb(16, 185, 129) 1px, transparent 1px),
+            linear-gradient(to bottom, rgb(16, 185, 129) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      <div
+        className="fixed inset-0 opacity-[0.015] mix-blend-overlay"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2310b981' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }}
+      />
+
       <SubtleBackground />
 
       {/* Confetti */}

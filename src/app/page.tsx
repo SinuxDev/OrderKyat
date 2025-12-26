@@ -51,7 +51,6 @@ export default function Home() {
   };
 
   const handleGenerate = async (data: ExtractedData, storeInfo: StoreInfo) => {
-    // console.log("🔍 Received in page.tsx:", { data, storeInfo });
     setExtractedData(data);
     setStoreInfo(storeInfo);
     setStep("preview");
@@ -63,7 +62,35 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+    <main className="min-h-screen relative overflow-hidden">
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50" />
+
+      <div className="fixed inset-0 opacity-40">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+        <div className="absolute bottom-0 left-1/3 w-96 h-96 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
+      </div>
+
+      <div className="fixed inset-x-0 top-0 h-[600px] bg-gradient-radial from-blue-100/50 via-transparent to-transparent" />
+
+      <div
+        className="fixed inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgb(99, 102, 241) 1px, transparent 1px),
+            linear-gradient(to bottom, rgb(99, 102, 241) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      <div
+        className="fixed inset-0 opacity-[0.015] mix-blend-overlay"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
       {/* Settings Modal */}
       <AnimatePresence>
         {showSettings && (
@@ -100,9 +127,6 @@ export default function Home() {
 
       {/* Animated Background */}
       <AnimatedBackground />
-
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] pointer-events-none" />
 
       {/* Main content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
