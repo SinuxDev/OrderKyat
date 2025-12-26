@@ -12,7 +12,6 @@ export default function InvoicePDFDocument({
   data,
   storeInfo,
 }: InvoicePDFDocumentProps) {
-  // ✅ Calculate totals
   const subtotal = data.items.reduce(
     (sum, item) => sum + item.quantity * item.price,
     0
@@ -53,7 +52,7 @@ export default function InvoicePDFDocument({
           {data.address && <Text style={pdfStyles.text}>{data.address}</Text>}
         </View>
 
-        {/* ✅ NEW: Delivery Information */}
+        {/*  Delivery Information */}
         {(data.deliveryType ||
           (data.deliveryFee !== undefined && data.deliveryFee >= 0)) && (
           <View style={pdfStyles.deliverySection}>
@@ -94,7 +93,7 @@ export default function InvoicePDFDocument({
           ))}
         </View>
 
-        {/* ✅ NEW: Summary Section (Subtotal, Delivery, Total) */}
+        {/*  Summary Section (Subtotal, Delivery, Total) */}
         <View style={pdfStyles.summarySection}>
           {/* Subtotal */}
           <View style={pdfStyles.summaryRow}>

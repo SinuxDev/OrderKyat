@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Truck, AlertCircle } from "lucide-react"; // ✅ Add AlertCircle
+import { Truck, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,7 +17,7 @@ interface DeliverySectionProps {
   deliveryType?: DeliveryType;
   deliveryFee?: number;
   updateField: (field: string, value: unknown) => void;
-  showError?: boolean; // ✅ NEW: Error state prop
+  showError?: boolean;
 }
 
 const DELIVERY_OPTIONS: {
@@ -51,7 +51,7 @@ export default function DeliverySection({
   deliveryType,
   deliveryFee,
   updateField,
-  showError = false, // ✅ NEW: Default to false
+  showError = false,
 }: DeliverySectionProps) {
   const isFreeDelivery =
     deliveryType === "Free Delivery" || deliveryType === "Self Pickup";
@@ -76,7 +76,7 @@ export default function DeliverySection({
 
   return (
     <motion.div
-      id="delivery-section" // ✅ Add ID for scroll target
+      id="delivery-section"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
@@ -86,12 +86,10 @@ export default function DeliverySection({
         <Truck className="w-5 h-5 text-blue-600" />
         <h3 className="text-lg sm:text-xl font-bold text-slate-900">
           Delivery Information
-          {/* ✅ Required indicator */}
           <span className="text-red-500 ml-1">*</span>
         </h3>
       </div>
 
-      {/* ✅ NEW: Error message */}
       <AnimatePresence>
         {showError && (
           <motion.div
@@ -117,14 +115,13 @@ export default function DeliverySection({
             className="text-sm font-medium text-slate-700"
           >
             Delivery Type <span className="text-red-500">*</span>{" "}
-            {/* ✅ Required indicator */}
           </Label>
           <Select value={deliveryType} onValueChange={handleDeliveryTypeChange}>
             <SelectTrigger
               id="deliveryType"
               className={`bg-slate-50 text-slate-900 w-full !h-11 !min-h-11 !max-h-11 ${
                 showError && !deliveryType
-                  ? "border-red-300 focus:ring-red-500" // ✅ Red border on error
+                  ? "border-red-300 focus:ring-red-500"
                   : "border-slate-300"
               }`}
             >

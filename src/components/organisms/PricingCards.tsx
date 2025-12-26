@@ -69,7 +69,7 @@ export default function PricingCards({ onGetStarted }: PricingCardsProps) {
         </button>
       </div>
 
-      {/* Desktop: Side by Side */}
+      {/* Desktop */}
       <div className="hidden md:grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         {/* Free Plan Card */}
         <motion.div
@@ -159,7 +159,7 @@ export default function PricingCards({ onGetStarted }: PricingCardsProps) {
         </motion.div>
       </div>
 
-      {/* Mobile: Tab Content */}
+      {/* Mobile */}
       <div className="md:hidden max-w-md mx-auto">
         <AnimatePresence mode="wait">
           {activePlan === "free" && (

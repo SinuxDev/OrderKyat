@@ -56,7 +56,6 @@ export default function CustomerDetailsSection({
 
       <div className="space-y-2">
         <Label className="text-sm font-medium">Address / City</Label>
-        {/* ✅ Using named handler */}
         <AddressCombobox
           value={formData.address}
           onChange={handleAddressChange}

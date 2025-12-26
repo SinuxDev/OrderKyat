@@ -65,7 +65,6 @@ export const pdfStyles = StyleSheet.create({
   col3: { width: "20%", textAlign: "right" },
   col4: { width: "15%", textAlign: "right" },
 
-  // ✅ NEW: Delivery section styles
   deliverySection: {
     marginTop: 15,
     marginBottom: 15,
@@ -94,7 +93,6 @@ export const pdfStyles = StyleSheet.create({
     marginTop: 4,
   },
 
-  // ✅ NEW: Summary section (subtotal + delivery + total)
   summarySection: {
     marginTop: 20,
     paddingTop: 15,
@@ -136,7 +134,6 @@ export const pdfStyles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // ✅ UPDATED: Total section (now grand total)
   total: {
     marginTop: 15,
     flexDirection: "row",

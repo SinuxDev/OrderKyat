@@ -51,7 +51,7 @@ export default function Home() {
   };
 
   const handleGenerate = async (data: ExtractedData, storeInfo: StoreInfo) => {
-    console.log("🔍 Received in page.tsx:", { data, storeInfo });
+    // console.log("🔍 Received in page.tsx:", { data, storeInfo });
     setExtractedData(data);
     setStoreInfo(storeInfo);
     setStep("preview");

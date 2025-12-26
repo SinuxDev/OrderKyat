@@ -76,9 +76,6 @@ export default function InvoicePDFPreview({
           ))}
       </AnimatePresence>
 
-      {/* ❌ DELETED - Old Success Badge that was in top-right corner */}
-      {/* This section has been removed - see lines 83-97 in your original code */}
-
       {/* Header */}
       <PageHeader
         showBack={true}
@@ -224,7 +221,7 @@ export default function InvoicePDFPreview({
             </motion.div>
           </motion.div>
 
-          {/* Mobile: Summary Card - NOW CENTERED */}
+          {/* Mobile: Summary Card  */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}

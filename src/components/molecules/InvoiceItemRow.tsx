@@ -98,12 +98,12 @@ export default function InvoiceItemRow({
         </div>
       </motion.div>
 
-      {/* Desktop Layout - OPTIMIZED SPACE USAGE */}
+      {/* Desktop Layout */}
       <motion.div
         whileHover={{ scale: 1.002, backgroundColor: "#f8fafc" }}
         className="hidden sm:grid grid-cols-[1fr_100px_140px_140px_auto] gap-3 lg:gap-4 items-center p-2.5 lg:p-3 rounded-lg transition-all"
       >
-        {/* Item Name - Takes all remaining space (1fr) */}
+        {/* Item Name  */}
         <Input
           placeholder="Item name"
           value={item.name}
@@ -111,7 +111,7 @@ export default function InvoiceItemRow({
           className="w-full bg-slate-50 border-slate-300 text-slate-900 text-sm lg:text-base h-10 lg:h-11"
         />
 
-        {/* Quantity - Fixed 100px */}
+        {/* Quantity  */}
         <Input
           type="number"
           placeholder="Qty"
@@ -122,7 +122,7 @@ export default function InvoiceItemRow({
           className="w-full bg-slate-50 border-slate-300 text-slate-900 text-sm lg:text-base h-10 lg:h-11 text-center"
         />
 
-        {/* Price - Fixed 140px */}
+        {/* Price  */}
         <Input
           type="number"
           placeholder="Price"
@@ -131,7 +131,7 @@ export default function InvoiceItemRow({
           className="w-full bg-slate-50 border-slate-300 text-slate-900 text-sm lg:text-base h-10 lg:h-11 text-right"
         />
 
-        {/* Subtotal - Fixed 140px, right-aligned */}
+        {/* Subtotal */}
         <div className="text-right">
           <motion.span
             key={subtotal}
@@ -143,7 +143,7 @@ export default function InvoiceItemRow({
           </motion.span>
         </div>
 
-        {/* Delete Button - Auto width */}
+        {/* Delete Button */}
         <motion.button
           whileHover={{ scale: 1.1, rotate: 5 }}
           whileTap={{ scale: 0.9 }}

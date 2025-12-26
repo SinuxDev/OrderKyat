@@ -47,7 +47,6 @@ export default function AddressCombobox({
 
   const handleInputChange = (search: string) => {
     setInputValue(search);
-    // Allow typing custom city
     if (search) {
       onChange(search);
     }

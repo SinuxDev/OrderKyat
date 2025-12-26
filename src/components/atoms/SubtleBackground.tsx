@@ -13,7 +13,7 @@ const MINIMAL_SHAPES = [
     duration: 12,
     delay: 0,
     rotate: 15,
-    color: "text-blue-400/40", // Increased opacity
+    color: "text-blue-400/40",
   },
   {
     id: 1,
@@ -23,7 +23,7 @@ const MINIMAL_SHAPES = [
     duration: 14,
     delay: 2,
     rotate: -12,
-    color: "text-purple-400/40", // Increased opacity
+    color: "text-purple-400/40",
   },
   {
     id: 2,
@@ -33,7 +33,7 @@ const MINIMAL_SHAPES = [
     duration: 13,
     delay: 4,
     rotate: -10,
-    color: "text-green-400/40", // Increased opacity
+    color: "text-green-400/40",
   },
 ];
 
@@ -41,18 +41,17 @@ export default function SubtleBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-60">
       {" "}
-      {/* Increased from 40 to 60 */}
       {/* Single subtle gradient orb - MORE VISIBLE */}
       <motion.div
         className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-300/40 to-indigo-400/40 rounded-full blur-3xl" // Increased size and opacity
         animate={{
-          scale: [1, 1.2, 1], // Increased scale
-          opacity: [0.3, 0.5, 0.3], // Increased opacity range
-          x: [-15, 15, -15], // Increased movement
+          scale: [1, 1.2, 1],
+          opacity: [0.3, 0.5, 0.3],
+          x: [-15, 15, -15],
           y: [-15, 15, -15],
         }}
         transition={{
-          duration: 12, // Faster
+          duration: 12,
           repeat: Infinity,
           ease: "easeInOut",
         }}
@@ -61,15 +60,15 @@ export default function SubtleBackground() {
       {MINIMAL_SHAPES.map((shape) => (
         <motion.div
           key={shape.id}
-          className="absolute" // Show on mobile too - remove hidden md:block
+          className="absolute"
           style={{
             left: `${shape.left}%`,
             top: `${shape.top}%`,
           }}
           animate={{
-            opacity: [0.2, 0.35, 0.2], // Increased opacity
-            y: [0, -35, 0], // Increased movement
-            rotate: [shape.rotate, shape.rotate + 8, shape.rotate], // More rotation
+            opacity: [0.2, 0.35, 0.2],
+            y: [0, -35, 0],
+            rotate: [shape.rotate, shape.rotate + 8, shape.rotate],
           }}
           transition={{
             duration: shape.duration,

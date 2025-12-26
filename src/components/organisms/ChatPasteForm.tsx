@@ -50,14 +50,12 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
     return clean.slice(0, 1000);
   };
 
-  // ✅ UPDATED: Enhanced validation for comma-separated format
   const validateFormat = (text: string) => {
     if (!text.trim()) {
       setFormatStatus("empty");
       return;
     }
 
-    // Security check
     const hasSuspiciousChars = /<|>|{|}|\[|\]|script|function|eval|alert/.test(
       text.toLowerCase()
     );
@@ -66,26 +64,21 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
       return;
     }
 
-    // Check format structure
     const parts = text.split(",").map((p) => p.trim());
 
-    // Should have at least 3 parts: Name, Phone, Item(s)
     if (parts.length < 3) {
       setFormatStatus("warning");
       return;
     }
 
-    // Validate each component
     const hasName = /^[a-zA-Z\s\u1000-\u109F]+$/.test(parts[0]);
     const hasPhone = /(\+?959\d{7,9}|09\d{7,9})/.test(text);
     const hasItems = /\d+\s+[a-zA-Z\u1000-\u109F]+/.test(text);
     const hasPrices = /@\s*\d+/.test(text);
 
-    // Check if items are properly formatted with @ symbol
     const itemsWithPrices = text.match(/\d+\s+[a-zA-Z\s]+@\s*\d+/g);
     const hasProperItemFormat = itemsWithPrices && itemsWithPrices.length > 0;
 
-    // Validation logic
     if (!hasName) {
       setFormatStatus("warning");
     } else if (!hasPhone) {
@@ -157,7 +150,7 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
     }
   };
 
-  // ✅ UPDATED: Enhanced validation messages
+  // Enhanced validation messages
   const getValidationMessage = () => {
     switch (formatStatus) {
       case "good":
@@ -195,7 +188,7 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
     }
   };
 
-  // ✅ NEW: Progressive validation indicators
+  // Progressive validation indicators
   const getDetectedComponents = () => {
     if (!chatText.trim() || chatText.length < 5) return null;
 
@@ -284,7 +277,6 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
                     <span className="text-blue-600">[, City]</span>
                   </code>
 
-                  {/* Examples */}
                   <div className="space-y-3 mb-4">
                     {/* With city */}
                     <div className="bg-white rounded-lg p-3 lg:p-4">
@@ -335,7 +327,7 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
             )}
           </AnimatePresence>
 
-          {/* ✅ NEW: Format Hint Component */}
+          {/* Format Hint Component */}
           <motion.div
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -374,7 +366,7 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
               <span>{chatText.length}/1000</span>
             </div>
 
-            {/* ✅ NEW: Progressive validation indicators */}
+            {/* Progressive validation indicators */}
             <AnimatePresence>
               {detected && (
                 <motion.div
@@ -449,7 +441,8 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
                         {previewData.customerName || "No name"},{" "}
                         {previewData.phone || "No phone"}
                         {previewData.address && `, ${previewData.address}`}
-                        {!previewData.address && " (City can be added next)"},{" "}
+                        {!previewData.address &&
+                          " (City can be added next)"},{" "}
                         {previewData.items.length} item(s), Total:{" "}
                         {previewData.totalPrice.toLocaleString()} Ks
                       </p>

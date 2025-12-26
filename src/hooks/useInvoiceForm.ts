@@ -9,7 +9,6 @@ export function useInvoiceForm(initialData: ExtractedData) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // ✅ UPDATED: Changed to accept string and unknown for flexibility
   const updateField = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasUnsavedChanges(true);

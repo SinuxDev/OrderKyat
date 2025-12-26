@@ -215,7 +215,7 @@ export default function ProductExplainerModal({
               </div>
             </div>
 
-            {/* Footer - Fixed */}
+            {/* Footer */}
             <div className="border-t border-slate-200 p-6 sm:p-8 bg-white rounded-b-2xl flex-shrink-0">
               <div className="flex flex-col sm:flex-row gap-3 justify-end">
                 <motion.button

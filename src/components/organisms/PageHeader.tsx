@@ -34,7 +34,6 @@ export default function PageHeader({
     <div className="sticky top-0 left-0 right-0 z-10 bg-white border-b border-slate-200 shadow-sm w-full">
       <div className="w-full px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
-          {/* Left: Back Button + Icon + Title */}
           <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1">
             {/* Back Button */}
             {showBack && onBack && (
@@ -67,9 +66,9 @@ export default function PageHeader({
             </div>
           </div>
 
-          {/* ✅ Right: Actions + Settings Button - Separate containers */}
+          {/* Actions + Settings Button */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-            {/* Custom Actions - Can be hidden on mobile */}
+            {/* Custom Actions  */}
             {actions && (
               <div
                 className={
@@ -82,7 +81,7 @@ export default function PageHeader({
               </div>
             )}
 
-            {/* ✅ Settings Button - Always visible */}
+            {/* Settings Button  */}
             {showSettings && onSettings && (
               <Button
                 variant="outline"
@@ -95,7 +94,7 @@ export default function PageHeader({
                 <span className="hidden sm:inline lg:hidden text-sm">
                   Settings
                 </span>
-                {/* ✅ Mobile: Show only icon */}
+                {/* Mobile */}
                 <span className="sr-only sm:not-sr-only">Settings</span>
               </Button>
             )}

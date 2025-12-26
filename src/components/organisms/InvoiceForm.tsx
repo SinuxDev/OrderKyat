@@ -123,13 +123,6 @@ export default function InvoiceForm({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  // ❌ REMOVED: The problematic useEffect
-  // useEffect(() => {
-  //   if (formData.deliveryType && showDeliveryError) {
-  //     setShowDeliveryError(false);
-  //   }
-  // }, [formData.deliveryType, showDeliveryError]);
-
   const handlePhoneChange = (value: string) => {
     const cleaned = value.replace(/[^\d\s+\-()]/g, "");
     updateField("phone", cleaned);
@@ -157,7 +150,6 @@ export default function InvoiceForm({
     return itemsTotal + deliveryFee;
   };
 
-  // ✅ UPDATED: Validate and handle error
   const handleGenerateClick = () => {
     if (!formData.deliveryType) {
       setShowDeliveryError(true);
@@ -168,16 +160,13 @@ export default function InvoiceForm({
       return;
     }
 
-    // ✅ Clear error if delivery is selected
     setShowDeliveryError(false);
     setShowConfirmDialog(true);
   };
 
-  // ✅ NEW: Handle delivery field updates - clear error when delivery is selected
   const handleDeliveryUpdate = (field: string, value: unknown) => {
     updateField(field, value);
 
-    // Clear error when delivery type is selected
     if (field === "deliveryType" && value && showDeliveryError) {
       setShowDeliveryError(false);
     }
@@ -310,11 +299,10 @@ export default function InvoiceForm({
                 removeItem={removeItem}
               />
 
-              {/* ✅ UPDATED: Use handleDeliveryUpdate instead of updateField */}
               <DeliverySection
                 deliveryType={formData.deliveryType}
                 deliveryFee={formData.deliveryFee}
-                updateField={handleDeliveryUpdate} // ✅ Changed
+                updateField={handleDeliveryUpdate}
                 showError={showDeliveryError}
               />
 
