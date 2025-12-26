@@ -1,167 +1,257 @@
 import { StyleSheet } from "@react-pdf/renderer";
 
 export const pdfStyles = StyleSheet.create({
+  // Page Layout
   page: {
     padding: 40,
     backgroundColor: "#ffffff",
-  },
-  header: {
-    marginBottom: 20,
-    borderBottom: "2px solid #10b981",
-    paddingBottom: 15,
-  },
-  logo: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#10b981",
-    marginBottom: 5,
-  },
-  storeInfo: {
+    fontFamily: "Helvetica",
     fontSize: 10,
-    color: "#64748b",
-    marginTop: 3,
   },
-  title: {
-    fontSize: 24,
-    textAlign: "center",
-    marginBottom: 10,
-    color: "#1e293b",
+
+  // ==================== HEADER SECTION ====================
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 30,
+    paddingBottom: 20,
+    borderBottom: "3px solid #2563eb", // Blue brand color
   },
-  section: {
-    marginBottom: 15,
+  headerLeft: {
+    flexDirection: "column",
   },
-  sectionTitle: {
-    fontSize: 12,
+  invoiceTitle: {
+    fontSize: 32,
     fontWeight: "bold",
-    marginBottom: 8,
-    color: "#475569",
-    textTransform: "uppercase",
-  },
-  text: {
-    fontSize: 11,
+    color: "#2563eb", // Blue
     marginBottom: 4,
-    color: "#334155",
+    letterSpacing: 1,
   },
+  brandName: {
+    fontSize: 12,
+    color: "#6b7280", // Gray
+    marginTop: 2,
+  },
+  headerRight: {
+    alignItems: "flex-end",
+  },
+  invoiceNumber: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#1f2937", // Dark gray
+    marginBottom: 4,
+  },
+  invoiceDate: {
+    fontSize: 10,
+    color: "#6b7280",
+  },
+
+  // ==================== INFO SECTION ====================
+  infoContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 30,
+    gap: 15,
+  },
+  infoBox: {
+    width: "48%",
+    padding: 16,
+    backgroundColor: "#f9fafb", // Light gray background
+    borderRadius: 6,
+    borderLeft: "3px solid #4f46e5", // Indigo accent
+  },
+  infoLabel: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#4f46e5", // Indigo
+    marginBottom: 10,
+    letterSpacing: 0.8,
+  },
+  infoNamePrimary: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#1f2937",
+    marginBottom: 6,
+  },
+  infoText: {
+    fontSize: 10,
+    color: "#4b5563",
+    marginBottom: 3,
+    lineHeight: 1.4,
+  },
+
+  // ==================== TABLE SECTION ====================
   table: {
-    marginTop: 15,
-    marginBottom: 15,
+    marginTop: 10,
+    marginBottom: 20,
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#f1f5f9",
-    padding: 8,
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#475569",
+    backgroundColor: "#4f46e5", // Indigo
+    padding: 12,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
   },
   tableRow: {
     flexDirection: "row",
-    borderBottom: "1px solid #e2e8f0",
-    padding: 8,
-    fontSize: 10,
-  },
-  col1: { width: "50%" },
-  col2: { width: "15%", textAlign: "center" },
-  col3: { width: "20%", textAlign: "right" },
-  col4: { width: "15%", textAlign: "right" },
-
-  deliverySection: {
-    marginTop: 15,
-    marginBottom: 15,
+    borderBottom: "1px solid #e5e7eb",
     padding: 12,
-    backgroundColor: "#eff6ff",
-    borderRadius: 4,
-    borderLeft: "3px solid #3b82f6",
-  },
-  deliveryTitle: {
-    fontSize: 11,
-    fontWeight: "bold",
-    color: "#1e40af",
-    marginBottom: 6,
-  },
-  deliveryText: {
-    fontSize: 10,
-    color: "#334155",
-    marginBottom: 3,
-  },
-  deliveryBadge: {
-    fontSize: 9,
-    color: "#3b82f6",
-    backgroundColor: "#dbeafe",
-    padding: "4px 8px",
-    borderRadius: 3,
-    marginTop: 4,
+    backgroundColor: "#ffffff",
   },
 
-  summarySection: {
-    marginTop: 20,
-    paddingTop: 15,
-    borderTop: "1px solid #e2e8f0",
+  // TABLE HEADER COLUMNS (White text on indigo background)
+  col1: {
+    width: "45%",
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#ffffff", // White for header
+  },
+  col2: {
+    width: "15%",
+    textAlign: "center",
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#ffffff",
+  },
+  col3: {
+    width: "20%",
+    textAlign: "right",
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#ffffff",
+  },
+  col4: {
+    width: "20%",
+    textAlign: "right",
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#ffffff",
+  },
+
+  // TABLE ROW COLUMNS (Dark text on white background) - NEW!
+  rowCol1: {
+    width: "45%",
+    fontSize: 10,
+    color: "#374151", // Dark gray for rows
+  },
+  rowCol2: {
+    width: "15%",
+    textAlign: "center",
+    fontSize: 10,
+    color: "#374151",
+  },
+  rowCol3: {
+    width: "20%",
+    textAlign: "right",
+    fontSize: 10,
+    color: "#374151",
+  },
+  rowCol4: {
+    width: "20%",
+    textAlign: "right",
+    fontSize: 10,
+    color: "#374151",
+    fontWeight: "bold", // Make total bold
+  },
+
+  // ==================== DELIVERY BADGE ====================
+  deliveryBadgeContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    marginBottom: 15,
+    paddingRight: 5,
+  },
+  deliveryBadgeLabel: {
+    fontSize: 10,
+    color: "#6b7280",
+    marginRight: 8,
+  },
+  deliveryBadgeValue: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#4f46e5", // Indigo
+    backgroundColor: "#eef2ff", // Light indigo
+    padding: "5 12",
+    borderRadius: 4,
+  },
+
+  // ==================== SUMMARY SECTION ====================
+  summaryContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 10,
+  },
+  summaryBox: {
+    width: "45%",
+    minWidth: 200,
   },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
-    paddingHorizontal: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderBottom: "1px solid #e5e7eb",
   },
   summaryLabel: {
     fontSize: 11,
-    color: "#64748b",
+    color: "#6b7280",
   },
   summaryValue: {
     fontSize: 11,
-    color: "#334155",
+    color: "#1f2937",
     fontWeight: "bold",
   },
-  summaryDeliveryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-    paddingHorizontal: 10,
-    backgroundColor: "#f8fafc",
-    padding: 6,
-    borderRadius: 3,
-  },
-  summaryDeliveryLabel: {
+  freeDeliveryText: {
     fontSize: 11,
-    color: "#3b82f6",
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  summaryDeliveryValue: {
-    fontSize: 11,
-    color: "#3b82f6",
+    color: "#10b981", // Green
     fontWeight: "bold",
+  },
+  summaryDivider: {
+    height: 1,
+    backgroundColor: "#d1d5db",
+    marginVertical: 5,
   },
 
-  total: {
-    marginTop: 15,
+  // Grand Total - Highlighted
+  grandTotalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingTop: 15,
-    paddingHorizontal: 10,
-    borderTop: "2px solid #10b981",
+    backgroundColor: "#2563eb", // Blue
+    padding: 14,
+    borderRadius: 6,
+    marginTop: 8,
   },
-  totalLabel: {
-    fontSize: 14,
+  grandTotalLabel: {
+    fontSize: 13,
     fontWeight: "bold",
-    color: "#1e293b",
+    color: "#ffffff",
+    letterSpacing: 0.5,
   },
-  totalText: {
+  grandTotalValue: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#10b981",
+    color: "#ffffff",
   },
 
+  // ==================== FOOTER ====================
   footer: {
     position: "absolute",
-    bottom: 30,
+    bottom: 35,
     left: 40,
     right: 40,
     textAlign: "center",
+    paddingTop: 15,
+    borderTop: "1px solid #e5e7eb",
+  },
+  footerThankYou: {
+    fontSize: 11,
+    color: "#4b5563",
+    marginBottom: 5,
+  },
+  footerBrand: {
     fontSize: 9,
-    color: "#94a3b8",
-    borderTop: "1px solid #e2e8f0",
-    paddingTop: 10,
+    color: "#9ca3af",
   },
 });

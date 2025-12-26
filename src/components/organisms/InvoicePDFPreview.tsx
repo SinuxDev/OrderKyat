@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
+import { useState, useMemo, useCallback } from "react";
+import { PDFViewer, pdf } from "@react-pdf/renderer";
 import { ExtractedData } from "@/types/invoice";
 import { StoreInfo } from "./StoreSettings";
 import {
@@ -18,7 +18,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import SubtleBackground from "@/components/atoms/SubtleBackground";
 import InvoicePDFDocument from "@/components/molecules/InvoicePDFDocument";
 import { useConfetti } from "@/hooks/useConfetti";
-import { generateFileName } from "@/lib/invoiceUtils";
+import {
+  generateFileName,
+  generateSequentialInvoiceNumber,
+} from "@/lib/invoiceUtils";
 
 interface InvoicePDFPreviewProps {
   data: ExtractedData;
@@ -35,10 +38,50 @@ export default function InvoicePDFPreview({
   const [timestamp] = useState(() => Date.now());
   const { showConfetti, confettiParticles } = useConfetti(3000);
 
+  const [invoiceNumber, setInvoiceNumber] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const getOrGenerateInvoiceNumber = useCallback(() => {
+    if (invoiceNumber) {
+      return invoiceNumber;
+    }
+    const newNumber = generateSequentialInvoiceNumber();
+    setInvoiceNumber(newNumber);
+    return newNumber;
+  }, [invoiceNumber]);
+
+  const previewInvoiceNumber = invoiceNumber || "INV-2025-XXXX";
+
   const fileName = useMemo(
     () => generateFileName(storeInfo.name, data.customerName, timestamp),
     [data.customerName, storeInfo.name, timestamp]
   );
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const finalInvoiceNumber = getOrGenerateInvoiceNumber();
+
+      const blob = await pdf(
+        <InvoicePDFDocument
+          data={data}
+          storeInfo={storeInfo}
+          invoiceNumber={finalInvoiceNumber}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen overflow-hidden relative">
@@ -144,7 +187,7 @@ export default function InvoicePDFPreview({
               </Button>
             </motion.div>
 
-            {/* Download Button */}
+            {/* Download Button - Now uses custom handler */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -152,26 +195,17 @@ export default function InvoicePDFPreview({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <PDFDownloadLink
-                document={
-                  <InvoicePDFDocument data={data} storeInfo={storeInfo} />
-                }
-                fileName={fileName}
-                className="hidden sm:inline-flex"
+              <Button
+                size="sm"
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="hidden sm:inline-flex bg-green-600 hover:bg-green-700 gap-1.5 shadow-sm h-8 sm:h-9"
               >
-                {({ loading }) => (
-                  <Button
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700 gap-1.5 shadow-sm h-8 sm:h-9"
-                    disabled={loading}
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span className="text-sm">
-                      {loading ? "Preparing..." : "Download PDF"}
-                    </span>
-                  </Button>
-                )}
-              </PDFDownloadLink>
+                <Download className="w-3.5 h-3.5" />
+                <span className="text-sm">
+                  {isDownloading ? "Generating..." : "Download PDF"}
+                </span>
+              </Button>
             </motion.div>
           </>
         }
@@ -214,6 +248,9 @@ export default function InvoicePDFPreview({
                 </h3>
                 <p className="text-xs lg:text-sm text-green-700">
                   Your invoice is ready to download and share
+                  {invoiceNumber && ` • ${invoiceNumber}`}
+                  {!invoiceNumber &&
+                    " • Invoice # will be assigned on download"}
                 </p>
               </div>
 
@@ -226,7 +263,7 @@ export default function InvoicePDFPreview({
               </motion.div>
             </motion.div>
 
-            {/* PDF Viewer */}
+            {/* PDF Viewer  */}
             <motion.div
               className="bg-white shadow-2xl rounded-lg overflow-hidden mx-auto"
               style={{
@@ -244,12 +281,16 @@ export default function InvoicePDFPreview({
                 showToolbar={false}
                 className="border-0"
               >
-                <InvoicePDFDocument data={data} storeInfo={storeInfo} />
+                <InvoicePDFDocument
+                  data={data}
+                  storeInfo={storeInfo}
+                  invoiceNumber={previewInvoiceNumber}
+                />
               </PDFViewer>
             </motion.div>
           </motion.div>
 
-          {/* Mobile: Summary Card  */}
+          {/* Mobile */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -298,6 +339,7 @@ export default function InvoicePDFPreview({
                 className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50"
               >
                 {[
+                  { label: "Invoice #", value: previewInvoiceNumber },
                   { label: "Store", value: storeInfo.name || "OrderKyat" },
                   { label: "Customer", value: data.customerName },
                   { label: "Items", value: data.items.length.toString() },
@@ -346,47 +388,40 @@ export default function InvoicePDFPreview({
         </div>
       </div>
 
-      {/* Fixed Mobile Download Button */}
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
         className="fixed bottom-0 left-0 right-0 sm:hidden bg-white border-t border-slate-200 p-3 shadow-lg z-20"
       >
-        <PDFDownloadLink
-          document={<InvoicePDFDocument data={data} storeInfo={storeInfo} />}
-          fileName={fileName}
-        >
-          {({ loading }) => (
-            <motion.div whileTap={{ scale: 0.97 }}>
-              <Button
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12 text-base gap-2 shadow-md"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                    >
-                      <Download className="w-5 h-5" />
-                    </motion.div>
-                    Preparing PDF...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-5 h-5" />
-                    Download Invoice
-                  </>
-                )}
-              </Button>
-            </motion.div>
-          )}
-        </PDFDownloadLink>
+        <motion.div whileTap={{ scale: 0.97 }}>
+          <Button
+            onClick={handleDownload}
+            disabled={isDownloading}
+            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12 text-base gap-2 shadow-md"
+          >
+            {isDownloading ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  <Download className="w-5 h-5" />
+                </motion.div>
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <Download className="w-5 h-5" />
+                Download Invoice
+              </>
+            )}
+          </Button>
+        </motion.div>
       </motion.div>
     </div>
   );

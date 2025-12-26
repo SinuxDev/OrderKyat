@@ -6,11 +6,13 @@ import { pdfStyles } from "@/lib/pdfStyles";
 interface InvoicePDFDocumentProps {
   data: ExtractedData;
   storeInfo: StoreInfo;
+  invoiceNumber?: string;
 }
 
 export default function InvoicePDFDocument({
   data,
   storeInfo,
+  invoiceNumber,
 }: InvoicePDFDocumentProps) {
   const subtotal = data.items.reduce(
     (sum, item) => sum + item.quantity * item.price,
@@ -19,115 +21,131 @@ export default function InvoicePDFDocument({
   const deliveryFee = data.deliveryFee || 0;
   const grandTotal = subtotal + deliveryFee;
 
+  // Use provided invoice number or static fallback
+  const invoiceNo = invoiceNumber || "INV-2025-0000";
+
+  const invoiceDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
     <Document>
       <Page size="A4" style={pdfStyles.page}>
-        {/* Header */}
-        <View style={pdfStyles.header}>
-          <Text style={pdfStyles.logo}>{storeInfo.name || "OrderKyat"}</Text>
-          <Text style={pdfStyles.storeInfo}>
-            {storeInfo.phone || "+95 9 123 456 789"}
-          </Text>
-          <Text style={pdfStyles.storeInfo}>
-            {storeInfo.address || "Yangon, Myanmar"}
-          </Text>
+        {/* Header Section */}
+        <View style={pdfStyles.headerContainer}>
+          <View style={pdfStyles.headerLeft}>
+            <Text style={pdfStyles.invoiceTitle}>INVOICE</Text>
+            <Text style={pdfStyles.brandName}>OrderKyat</Text>
+          </View>
+          <View style={pdfStyles.headerRight}>
+            <Text style={pdfStyles.invoiceNumber}>{invoiceNo}</Text>
+            <Text style={pdfStyles.invoiceDate}>{invoiceDate}</Text>
+          </View>
         </View>
 
-        {/* Title */}
-        <Text style={pdfStyles.title}>INVOICE</Text>
-        <Text style={{ ...pdfStyles.text, textAlign: "right", fontSize: 9 }}>
-          Date:{" "}
-          {new Date().toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </Text>
+        {/* Store and Customer Info */}
+        <View style={pdfStyles.infoContainer}>
+          <View style={pdfStyles.infoBox}>
+            <Text style={pdfStyles.infoLabel}>FROM</Text>
+            <Text style={pdfStyles.infoNamePrimary}>
+              {storeInfo.name || "OrderKyat"}
+            </Text>
+            <Text style={pdfStyles.infoText}>
+              {storeInfo.phone || "+95 9 123 456 789"}
+            </Text>
+            <Text style={pdfStyles.infoText}>
+              {storeInfo.address || "Yangon, Myanmar"}
+            </Text>
+          </View>
 
-        {/* Bill To */}
-        <View style={pdfStyles.section}>
-          <Text style={pdfStyles.sectionTitle}>Bill To:</Text>
-          <Text style={pdfStyles.text}>{data.customerName}</Text>
-          <Text style={pdfStyles.text}>{data.phone}</Text>
-          {data.address && <Text style={pdfStyles.text}>{data.address}</Text>}
-        </View>
-
-        {/*  Delivery Information */}
-        {(data.deliveryType ||
-          (data.deliveryFee !== undefined && data.deliveryFee >= 0)) && (
-          <View style={pdfStyles.deliverySection}>
-            <Text style={pdfStyles.deliveryTitle}>🚚 Delivery Information</Text>
-            {data.deliveryType && (
-              <Text style={pdfStyles.deliveryText}>
-                Type: {data.deliveryType}
-              </Text>
-            )}
-            {data.deliveryFee !== undefined && (
-              <Text style={pdfStyles.deliveryText}>
-                Delivery Fee: {data.deliveryFee.toLocaleString()} Ks
-              </Text>
+          <View style={pdfStyles.infoBox}>
+            <Text style={pdfStyles.infoLabel}>BILL TO</Text>
+            <Text style={pdfStyles.infoNamePrimary}>{data.customerName}</Text>
+            <Text style={pdfStyles.infoText}>{data.phone}</Text>
+            {data.address && (
+              <Text style={pdfStyles.infoText}>{data.address}</Text>
             )}
           </View>
-        )}
+        </View>
 
         {/* Items Table */}
         <View style={pdfStyles.table}>
           <View style={pdfStyles.tableHeader}>
-            <Text style={pdfStyles.col1}>Item</Text>
-            <Text style={pdfStyles.col2}>Qty</Text>
-            <Text style={pdfStyles.col3}>Price</Text>
-            <Text style={pdfStyles.col4}>Total</Text>
+            <Text style={pdfStyles.col1}>ITEM DESCRIPTION</Text>
+            <Text style={pdfStyles.col2}>QTY</Text>
+            <Text style={pdfStyles.col3}>PRICE</Text>
+            <Text style={pdfStyles.col4}>TOTAL</Text>
           </View>
 
           {data.items.map((item, index) => (
             <View key={index} style={pdfStyles.tableRow}>
-              <Text style={pdfStyles.col1}>{item.name}</Text>
-              <Text style={pdfStyles.col2}>{item.quantity}</Text>
-              <Text style={pdfStyles.col3}>
+              <Text style={pdfStyles.rowCol1}>{item.name}</Text>
+              <Text style={pdfStyles.rowCol2}>{item.quantity}</Text>
+              <Text style={pdfStyles.rowCol3}>
                 {item.price.toLocaleString()} Ks
               </Text>
-              <Text style={pdfStyles.col4}>
+              <Text style={pdfStyles.rowCol4}>
                 {(item.quantity * item.price).toLocaleString()} Ks
               </Text>
             </View>
           ))}
         </View>
 
-        {/*  Summary Section (Subtotal, Delivery, Total) */}
-        <View style={pdfStyles.summarySection}>
-          {/* Subtotal */}
-          <View style={pdfStyles.summaryRow}>
-            <Text style={pdfStyles.summaryLabel}>Subtotal:</Text>
-            <Text style={pdfStyles.summaryValue}>
-              {subtotal.toLocaleString()} Ks
+        {/* Delivery Badge */}
+        {data.deliveryType && (
+          <View style={pdfStyles.deliveryBadgeContainer}>
+            <Text style={pdfStyles.deliveryBadgeLabel}>Delivery Method:</Text>
+            <Text style={pdfStyles.deliveryBadgeValue}>
+              {data.deliveryType}
             </Text>
           </View>
+        )}
 
-          {/* Delivery Fee (only show if > 0) */}
-          {deliveryFee > 0 && (
-            <View style={pdfStyles.summaryDeliveryRow}>
-              <Text style={pdfStyles.summaryDeliveryLabel}>
-                🚚 Delivery Fee:
-              </Text>
-              <Text style={pdfStyles.summaryDeliveryValue}>
-                {deliveryFee.toLocaleString()} Ks
+        {/* Summary */}
+        <View style={pdfStyles.summaryContainer}>
+          <View style={pdfStyles.summaryBox}>
+            <View style={pdfStyles.summaryRow}>
+              <Text style={pdfStyles.summaryLabel}>Subtotal</Text>
+              <Text style={pdfStyles.summaryValue}>
+                {subtotal.toLocaleString()} Ks
               </Text>
             </View>
-          )}
 
-          {/* Grand Total */}
-          <View style={pdfStyles.total}>
-            <Text style={pdfStyles.totalLabel}>Total Amount:</Text>
-            <Text style={pdfStyles.totalText}>
-              {grandTotal.toLocaleString()} Ks
-            </Text>
+            {deliveryFee > 0 ? (
+              <View style={pdfStyles.summaryRow}>
+                <Text style={pdfStyles.summaryLabel}>Delivery Fee</Text>
+                <Text style={pdfStyles.summaryValue}>
+                  {deliveryFee.toLocaleString()} Ks
+                </Text>
+              </View>
+            ) : (
+              data.deliveryType && (
+                <View style={pdfStyles.summaryRow}>
+                  <Text style={pdfStyles.summaryLabel}>Delivery Fee</Text>
+                  <Text style={pdfStyles.freeDeliveryText}>FREE</Text>
+                </View>
+              )
+            )}
+
+            <View style={pdfStyles.summaryDivider} />
+
+            <View style={pdfStyles.grandTotalRow}>
+              <Text style={pdfStyles.grandTotalLabel}>GRAND TOTAL</Text>
+              <Text style={pdfStyles.grandTotalValue}>
+                {grandTotal.toLocaleString()} Ks
+              </Text>
+            </View>
           </View>
         </View>
 
         {/* Footer */}
         <View style={pdfStyles.footer}>
-          <Text>Thank you for your business!</Text>
-          <Text>
+          <Text style={pdfStyles.footerThankYou}>
+            Thank you for your business!
+          </Text>
+          <Text style={pdfStyles.footerBrand}>
             Generated by OrderKyat - Myanmar&apos;s Smart Invoice Generator 🇲🇲
           </Text>
         </View>
