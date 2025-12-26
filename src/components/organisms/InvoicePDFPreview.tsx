@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { PDFViewer, pdf } from "@react-pdf/renderer";
+import dynamic from "next/dynamic"; // ADD THIS
 import { ExtractedData } from "@/types/invoice";
 import { StoreInfo } from "./StoreSettings";
 import {
@@ -15,13 +16,18 @@ import {
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/organisms/PageHeader";
 import { motion, AnimatePresence } from "framer-motion";
-import SubtleBackground from "@/components/atoms/SubtleBackground";
 import InvoicePDFDocument from "@/components/molecules/InvoicePDFDocument";
 import { useConfetti } from "@/hooks/useConfetti";
 import {
   generateFileName,
   generateSequentialInvoiceNumber,
 } from "@/lib/invoiceUtils";
+
+// Lazy load SubtleBackground (not critical for mobile)
+const SubtleBackground = dynamic(
+  () => import("@/components/atoms/SubtleBackground"),
+  { ssr: false }
+);
 
 interface InvoicePDFPreviewProps {
   data: ExtractedData;
@@ -36,10 +42,25 @@ export default function InvoicePDFPreview({
 }: InvoicePDFPreviewProps) {
   const [scale, setScale] = useState(1);
   const [timestamp] = useState(() => Date.now());
-  const { showConfetti, confettiParticles } = useConfetti(3000);
-
   const [invoiceNumber, setInvoiceNumber] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mount detection and mobile check
+  useEffect(() => {
+    setIsMounted(true);
+    setIsMobile(window.innerWidth < 768);
+
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Reduced confetti on mobile
+  const { showConfetti, confettiParticles } = useConfetti(
+    isMobile ? 2000 : 3000
+  );
 
   const getOrGenerateInvoiceNumber = useCallback(() => {
     if (invoiceNumber) {
@@ -85,47 +106,58 @@ export default function InvoicePDFPreview({
 
   return (
     <div className="flex flex-col h-screen overflow-hidden relative">
-      <div className="fixed inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50" />
+      {/* MOBILE: Simple gradient only */}
+      {isMobile ? (
+        <div className="fixed inset-0 bg-gradient-to-br from-green-50 to-emerald-50" />
+      ) : (
+        <>
+          {/* DESKTOP: Full background */}
+          <div className="fixed inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50" />
 
-      <div className="fixed inset-0 opacity-30">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-green-400/25 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
-        <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-400/25 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
-        <div className="absolute bottom-20 left-1/2 w-96 h-96 bg-teal-400/25 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
-      </div>
+          <div className="fixed inset-0 opacity-30">
+            <div className="absolute top-20 left-20 w-96 h-96 bg-green-400/25 rounded-full mix-blend-multiply filter blur-3xl animate-blob transform-gpu" />
+            <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-400/25 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000 transform-gpu" />
+            <div className="absolute bottom-20 left-1/2 w-96 h-96 bg-teal-400/25 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000 transform-gpu" />
+          </div>
 
-      <div className="fixed inset-x-0 top-0 h-[500px] bg-gradient-radial from-green-100/40 via-transparent to-transparent" />
+          <div className="fixed inset-x-0 top-0 h-[500px] bg-gradient-radial from-green-100/40 via-transparent to-transparent" />
 
-      <div
-        className="fixed inset-0 opacity-[0.02]"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, rgb(16, 185, 129) 1px, transparent 1px),
-            linear-gradient(to bottom, rgb(16, 185, 129) 1px, transparent 1px)
-          `,
-          backgroundSize: "40px 40px",
-        }}
-      />
+          <div
+            className="fixed inset-0 opacity-[0.02] decoration-only"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, rgb(16, 185, 129) 1px, transparent 1px),
+                linear-gradient(to bottom, rgb(16, 185, 129) 1px, transparent 1px)
+              `,
+              backgroundSize: "60px 60px", // Larger grid = better performance
+            }}
+          />
 
-      <div
-        className="fixed inset-0 opacity-[0.015] mix-blend-overlay"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2310b981' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
-      />
+          <div
+            className="fixed inset-0 opacity-[0.015] mix-blend-overlay decoration-only"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2310b981' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          />
 
-      <SubtleBackground />
+          {/* SubtleBackground - Desktop only, lazy loaded */}
+          {isMounted && <SubtleBackground />}
+        </>
+      )}
 
-      {/* Confetti */}
+      {/* Confetti - Reduced particles on mobile */}
       <AnimatePresence>
         {showConfetti &&
-          confettiParticles.map((particle) => (
+          isMounted &&
+          confettiParticles.slice(0, isMobile ? 10 : 30).map((particle) => (
             <motion.div
               key={particle.id}
-              className="absolute w-3 h-3 rounded-full pointer-events-none z-50"
+              className="absolute w-3 h-3 rounded-full pointer-events-none z-50 transform-gpu"
               style={{
                 left: `${particle.left}%`,
                 top: -20,
                 backgroundColor: particle.color,
+                willChange: "transform, opacity",
               }}
               initial={{ y: -20, opacity: 1, rotate: 0 }}
               animate={{
@@ -157,11 +189,11 @@ export default function InvoicePDFPreview({
         hideMobileActions={true}
         actions={
           <>
-            {/* Zoom Controls */}
+            {/* Zoom Controls - Desktop only */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
               className="hidden md:flex items-center gap-1 bg-slate-100 rounded-lg p-1"
             >
               <Button
@@ -187,12 +219,12 @@ export default function InvoicePDFPreview({
               </Button>
             </motion.div>
 
-            {/* Download Button - Now uses custom handler */}
+            {/* Download Button */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, type: "spring" }}
-              whileHover={{ scale: 1.05 }}
+              transition={{ delay: 0.4, type: "spring", duration: 0.4 }}
+              whileHover={isMobile ? {} : { scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <Button
@@ -216,24 +248,24 @@ export default function InvoicePDFPreview({
         <div className="w-full p-4 md:p-8 lg:p-12">
           {/* Desktop: Full PDF Viewer */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
             className="hidden md:block w-full max-w-5xl space-y-6 mx-auto"
           >
             {/* Success Banner */}
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
               className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 lg:p-5 flex items-center gap-4 shadow-lg"
             >
               <motion.div
                 animate={{
-                  scale: [1, 1.1, 1],
+                  scale: [1, 1.08, 1],
                 }}
                 transition={{
-                  duration: 2,
+                  duration: 2.5,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
@@ -255,46 +287,49 @@ export default function InvoicePDFPreview({
               </div>
 
               <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                animate={{ rotate: [0, 8, -8, 0] }}
+                transition={{ duration: 2.5, repeat: Infinity }}
                 className="flex-shrink-0"
               >
                 <span className="text-3xl lg:text-4xl">🎉</span>
               </motion.div>
             </motion.div>
 
-            {/* PDF Viewer  */}
+            {/* PDF Viewer */}
             <motion.div
-              className="bg-white shadow-2xl rounded-lg overflow-hidden mx-auto"
+              className="bg-white shadow-2xl rounded-lg overflow-hidden mx-auto transform-gpu"
               style={{
                 transform: `scale(${scale})`,
                 transformOrigin: "center center",
                 transition: "transform 0.2s ease-out",
+                willChange: "transform",
               }}
               whileHover={{
                 boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               }}
             >
-              <PDFViewer
-                width="100%"
-                height="1000px"
-                showToolbar={false}
-                className="border-0"
-              >
-                <InvoicePDFDocument
-                  data={data}
-                  storeInfo={storeInfo}
-                  invoiceNumber={previewInvoiceNumber}
-                />
-              </PDFViewer>
+              {isMounted && (
+                <PDFViewer
+                  width="100%"
+                  height="1000px"
+                  showToolbar={false}
+                  className="border-0"
+                >
+                  <InvoicePDFDocument
+                    data={data}
+                    storeInfo={storeInfo}
+                    invoiceNumber={previewInvoiceNumber}
+                  />
+                </PDFViewer>
+              )}
             </motion.div>
           </motion.div>
 
-          {/* Mobile */}
+          {/* Mobile: Summary Card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.4 }}
             className="md:hidden w-full max-w-md mx-auto"
           >
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 space-y-6 border border-green-100">
@@ -302,20 +337,24 @@ export default function InvoicePDFPreview({
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 180 }}
                 className="text-center"
               >
                 <motion.div
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                  animate={{ rotate: [0, 8, -8, 0] }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    repeatDelay: 1,
+                  }}
                   className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
                 >
                   <CheckCircle className="w-10 h-10 text-white" />
                 </motion.div>
                 <motion.h3
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
+                  transition={{ delay: 0.4 }}
                   className="text-2xl font-bold text-slate-900 mb-2"
                 >
                   Invoice Ready!
@@ -323,7 +362,7 @@ export default function InvoicePDFPreview({
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
+                  transition={{ delay: 0.5 }}
                   className="text-sm text-slate-600 flex items-center justify-center gap-1"
                 >
                   Your invoice has been generated
@@ -333,9 +372,9 @@ export default function InvoicePDFPreview({
 
               {/* Invoice Summary */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
+                transition={{ delay: 0.6 }}
                 className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50"
               >
                 {[
@@ -346,9 +385,9 @@ export default function InvoicePDFPreview({
                 ].map((item, index) => (
                   <motion.div
                     key={item.label}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, x: -15 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 + index * 0.1 }}
+                    transition={{ delay: 0.7 + index * 0.08 }}
                     className="flex justify-between text-sm"
                   >
                     <span className="text-slate-600">{item.label}:</span>
@@ -359,15 +398,15 @@ export default function InvoicePDFPreview({
                 ))}
 
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 1.1 }}
+                  transition={{ delay: 1 }}
                   className="flex justify-between text-lg font-bold pt-3 border-t border-slate-200"
                 >
                   <span className="text-slate-900">Total:</span>
                   <motion.span
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 1, repeat: 2 }}
+                    animate={{ scale: [1, 1.04, 1] }}
+                    transition={{ duration: 1.2, repeat: 2 }}
                     className="text-green-600"
                   >
                     {data.totalPrice.toLocaleString()} Ks
@@ -378,7 +417,7 @@ export default function InvoicePDFPreview({
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.3 }}
+                transition={{ delay: 1.2 }}
                 className="text-xs text-center text-slate-500"
               >
                 💡 Preview is available on desktop devices
@@ -388,10 +427,11 @@ export default function InvoicePDFPreview({
         </div>
       </div>
 
+      {/* Fixed Mobile Download Button */}
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
+        transition={{ delay: 0.4, type: "spring", stiffness: 120 }}
         className="fixed bottom-0 left-0 right-0 sm:hidden bg-white border-t border-slate-200 p-3 shadow-lg z-20"
       >
         <motion.div whileTap={{ scale: 0.97 }}>
