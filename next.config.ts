@@ -24,23 +24,55 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react", "framer-motion"],
   },
 
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "X-DNS-Prefetch-Control",
+            value: "on",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "SAMEORIGIN",
+          },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-XSS-Protection",
+            value: "1; mode=block",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "origin-when-cross-origin",
+          },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
+      },
+    ];
+  },
+
   turbopack: {},
 
   webpack: (config, { isServer }) => {
-    config.resolve = {
-      ...config.resolve,
-      alias: {
-        ...(config.resolve?.alias || {}),
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
         canvas: false,
         encoding: false,
-      },
-    };
+        fs: false,
+      };
 
-    if (isServer) {
-      config.externals = [...(config.externals || []), "@react-pdf/renderer"];
-    }
-
-    if (!isServer) {
       config.optimization = config.optimization || {};
       config.optimization.splitChunks = {
         chunks: "all",

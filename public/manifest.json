@@ -1,0 +1,17 @@
+{
+  "name": "OrderKyat - Myanmar Invoice Generator",
+  "short_name": "OrderKyat",
+  "description": "Transform chat messages into professional PDF invoices instantly",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/orderKyatIcon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
