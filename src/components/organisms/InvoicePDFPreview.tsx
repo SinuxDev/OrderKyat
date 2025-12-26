@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { PDFViewer, pdf } from "@react-pdf/renderer";
-import dynamic from "next/dynamic"; // ADD THIS
+import { pdf } from "@react-pdf/renderer";
+import dynamic from "next/dynamic";
 import { ExtractedData } from "@/types/invoice";
 import { StoreInfo } from "./StoreSettings";
 import {
@@ -23,12 +23,30 @@ import {
   generateSequentialInvoiceNumber,
 } from "@/lib/invoiceUtils";
 
-// Lazy load SubtleBackground (not critical for mobile)
 const SubtleBackground = dynamic(
   () => import("@/components/atoms/SubtleBackground"),
   { ssr: false }
 );
 
+const PDFViewer = dynamic(
+  () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[1000px] bg-slate-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm font-medium text-slate-700">
+            Loading PDF Viewer...
+          </p>
+          <p className="text-xs text-slate-500 mt-1">
+            This may take a few seconds...
+          </p>
+        </div>
+      </div>
+    ),
+  }
+);
 interface InvoicePDFPreviewProps {
   data: ExtractedData;
   storeInfo: StoreInfo;
