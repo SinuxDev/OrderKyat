@@ -1,11 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 import PDFDocument from "pdfkit";
-import { ExtractedData } from "@/types/invoice";
+import { z } from "zod";
+import { logger } from "@/lib/logger";
+
+const InvoiceItemSchema = z.object({
+  id: z.string(),
+  quantity: z.number().int().positive(),
+  name: z.string().min(1),
+  price: z.number().nonnegative(),
+});
+
+const ExtractedDataSchema = z.object({
+  customerName: z.string().min(1, "Customer name is required"),
+  phone: z.string().min(1, "Phone is required"),
+  address: z.string().min(1, "Address is required"),
+  items: z.array(InvoiceItemSchema).min(1, "At least one item is required"),
+  totalPrice: z.number().nonnegative(),
+  deliveryType: z
+    .enum(["Cash on Delivery", "Prepaid", "Self Pickup", "Free Delivery"])
+    .optional(),
+  deliveryFee: z.number().nonnegative().optional(),
+});
 
 export async function POST(request: NextRequest) {
-  try {
-    const data: ExtractedData = await request.json();
+  let body: unknown;
 
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON in request body" },
+      { status: 400 }
+    );
+  }
+
+  const parsed = ExtractedDataSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid request data", details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  const data = parsed.data;
+
+  try {
     const doc = new PDFDocument({ margin: 50 });
     const chunks: Buffer[] = [];
 
@@ -56,7 +95,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("PDF generation error:", error);
+    logger.error("PDF generation error", error);
     return NextResponse.json(
       { error: "Failed to generate PDF" },
       { status: 500 }

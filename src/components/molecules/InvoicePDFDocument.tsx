@@ -1,6 +1,6 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { ExtractedData } from "@/types/invoice";
-import { StoreInfo } from "@/components/organisms/StoreSettings";
+import type { StoreInfo } from "@/types/store";
 import { pdfStyles } from "@/lib/pdfStyles";
 
 interface InvoicePDFDocumentProps {

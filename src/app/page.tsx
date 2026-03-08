@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { ExtractedData } from "@/types/invoice";
-import { StoreInfo } from "@/components/organisms/StoreSettings";
+import type { StoreInfo } from "@/types/store";
 
 const ChatPasteForm = dynamic(
   () => import("@/components/organisms/ChatPasteForm"),
@@ -62,6 +62,9 @@ const AnimatedBackground = dynamic(
 import HeroSection from "@/components/organisms/HeroSection";
 import TrustSection from "@/components/organisms/TrustSection";
 import Footer from "@/components/organisms/Footer";
+import { logger } from "@/lib/logger";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export default function Home() {
   const [step, setStep] = useState<"paste" | "review" | "preview">("paste");
@@ -70,17 +73,8 @@ export default function Home() {
   );
   const [showSettings, setShowSettings] = useState(false);
   const [showExplainer, setShowExplainer] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const chatFormRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   const [storeInfo, setStoreInfo] = useState<StoreInfo>(() => {
     if (typeof window !== "undefined") {
@@ -89,7 +83,7 @@ export default function Home() {
         try {
           return JSON.parse(saved);
         } catch (error) {
-          console.error("Failed to parse store info:", error);
+          logger.error("Failed to parse store info", error);
         }
       }
     }
@@ -219,7 +213,9 @@ export default function Home() {
                 exit={{ opacity: 0, x: 50 }}
                 className="flex justify-center mb-20 sm:mb-24 scroll-mt-24"
               >
-                <ChatPasteForm onExtract={handleExtract} />
+                <ErrorBoundary>
+                  <ChatPasteForm onExtract={handleExtract} />
+                </ErrorBoundary>
               </motion.div>
             )}
 
@@ -231,12 +227,14 @@ export default function Home() {
                 exit={{ opacity: 0, x: -50 }}
                 className="fixed inset-0 z-50 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50"
               >
-                <InvoiceForm
-                  initialData={extractedData}
-                  onGenerate={handleGenerate}
-                  onBack={() => setStep("paste")}
-                  onSettings={() => setShowSettings(true)}
-                />
+                <ErrorBoundary>
+                  <InvoiceForm
+                    initialData={extractedData}
+                    onGenerate={handleGenerate}
+                    onBack={() => setStep("paste")}
+                    onSettings={() => setShowSettings(true)}
+                  />
+                </ErrorBoundary>
               </motion.div>
             )}
 
@@ -248,11 +246,13 @@ export default function Home() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="fixed inset-0 z-50 bg-white"
               >
-                <InvoicePDFPreview
-                  data={extractedData}
-                  storeInfo={storeInfo}
-                  onBack={() => setStep("review")}
-                />
+                <ErrorBoundary>
+                  <InvoicePDFPreview
+                    data={extractedData}
+                    storeInfo={storeInfo}
+                    onBack={() => setStep("review")}
+                  />
+                </ErrorBoundary>
               </motion.div>
             )}
           </AnimatePresence>

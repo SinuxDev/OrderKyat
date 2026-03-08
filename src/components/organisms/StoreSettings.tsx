@@ -2,18 +2,15 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { logger } from "@/lib/logger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Store, Save, Building2, Phone, MapPin, X } from "lucide-react";
+import type { StoreInfo } from "@/types/store";
 
-export interface StoreInfo {
-  name: string;
-  phone: string;
-  address: string;
-  logo?: string;
-}
+export type { StoreInfo };
 
 interface StoreSettingsProps {
   onSave: (info: StoreInfo) => void;
@@ -37,7 +34,7 @@ export default function StoreSettings({
         try {
           return JSON.parse(saved);
         } catch (error) {
-          console.error("Failed to parse store info:", error);
+          logger.error("Failed to parse store info", error);
         }
       }
     }
