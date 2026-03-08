@@ -335,10 +335,10 @@ export default function ChatPasteForm({ onExtract }: ChatPasteFormProps) {
           >
             <span className="text-blue-600 font-medium">Format:</span>
             <span className="text-blue-700">
-              Name<span className="text-blue-400">,</span> Phone
-              <span className="text-blue-400">,</span> Qty Item @ Price
-              <span className="text-blue-400">,</span> Qty Item @ Price
-              <span className="text-blue-400 opacity-60">
+              Name<span className="text-blue-600">,</span> Phone
+              <span className="text-blue-600">,</span> Qty Item @ Price
+              <span className="text-blue-600">,</span> Qty Item @ Price
+              <span className="text-blue-600">
                 , City (optional)
               </span>
             </span>

@@ -56,10 +56,11 @@ export default function DeliverySection({
   const isFreeDelivery =
     deliveryType === "Free Delivery" || deliveryType === "Self Pickup";
 
-  const handleDeliveryTypeChange = (value: DeliveryType) => {
-    updateField("deliveryType", value);
+  const handleDeliveryTypeChange = (value: string) => {
+    const deliveryTypeValue = value as DeliveryType;
+    updateField("deliveryType", deliveryTypeValue);
 
-    const selected = DELIVERY_OPTIONS.find((opt) => opt.value === value);
+    const selected = DELIVERY_OPTIONS.find((opt) => opt.value === deliveryTypeValue);
     if (selected) {
       updateField("deliveryFee", selected.suggestedFee);
     }
@@ -116,7 +117,7 @@ export default function DeliverySection({
           >
             Delivery Type <span className="text-red-500">*</span>{" "}
           </Label>
-          <Select value={deliveryType} onValueChange={handleDeliveryTypeChange}>
+          <Select value={deliveryType ?? ""} onValueChange={handleDeliveryTypeChange}>
             <SelectTrigger
               id="deliveryType"
               className={`bg-slate-50 text-slate-900 w-full !h-11 !min-h-11 !max-h-11 ${
