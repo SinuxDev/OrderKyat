@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Download, Store, Lightbulb } from "lucide-react";
 import { ExtractedData } from "@/types/invoice";
-import { StoreInfo } from "@/components/organisms/StoreSettings";
+import type { StoreInfo } from "@/types/store";
 
 interface GenerateConfirmDialogProps {
   open: boolean;

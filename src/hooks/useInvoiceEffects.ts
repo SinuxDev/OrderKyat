@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { ExtractedData } from "@/types/invoice";
+import { logger } from "@/lib/logger";
 
 export function useDraftLoader(
   initialData: ExtractedData,
@@ -23,7 +24,7 @@ export function useDraftLoader(
           }
         }
       } catch (error) {
-        console.error("Failed to load draft:", error);
+        logger.error("Failed to load draft", error);
         localStorage.removeItem("orderkyat-invoice-draft");
       }
     }

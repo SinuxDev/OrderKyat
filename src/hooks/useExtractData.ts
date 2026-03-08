@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { extractInvoiceData } from "@/lib/extractors";
 import { ExtractedData } from "@/types/invoice";
+import { logger } from "@/lib/logger";
 
 export function useExtractData() {
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(
@@ -17,7 +18,7 @@ export function useExtractData() {
       setExtractedData(data);
       return data;
     } catch (error) {
-      console.error("Extraction failed:", error);
+      logger.error("Extraction failed", error);
       return null;
     } finally {
       setIsExtracting(false);

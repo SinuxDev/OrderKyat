@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { pdf } from "@react-pdf/renderer";
 import dynamic from "next/dynamic";
 import { ExtractedData } from "@/types/invoice";
-import { StoreInfo } from "./StoreSettings";
+import type { StoreInfo } from "@/types/store";
 import {
   Download,
   ZoomIn,
@@ -22,6 +22,8 @@ import {
   generateFileName,
   generateSequentialInvoiceNumber,
 } from "@/lib/invoiceUtils";
+import { logger } from "@/lib/logger";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const SubtleBackground = dynamic(
   () => import("@/components/atoms/SubtleBackground"),
@@ -63,16 +65,11 @@ export default function InvoicePDFPreview({
   const [invoiceNumber, setInvoiceNumber] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
 
-  // Mount detection and mobile check
+  // Mount detection
   useEffect(() => {
     setIsMounted(true);
-    setIsMobile(window.innerWidth < 768);
-
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Reduced confetti on mobile
@@ -116,7 +113,7 @@ export default function InvoicePDFPreview({
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      logger.error("Error generating PDF", error);
     } finally {
       setIsDownloading(false);
     }

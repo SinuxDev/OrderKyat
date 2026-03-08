@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { ExtractedData, InvoiceItem } from "@/types/invoice";
-import { StoreInfo } from "@/components/organisms/StoreSettings";
+import type { StoreInfo } from "@/types/store";
 import { v4 as uuidv4 } from "uuid";
+import { logger } from "@/lib/logger";
 
 export function useInvoiceForm(initialData: ExtractedData) {
   const [formData, setFormData] = useState<ExtractedData>(initialData);
@@ -82,7 +83,7 @@ export function useStoreInfo() {
         try {
           return JSON.parse(saved);
         } catch (error) {
-          console.error("Failed to parse store info:", error);
+          logger.error("Failed to parse store info", error);
         }
       }
     }
@@ -116,7 +117,7 @@ export function useAutoSave(
         setLastSaved(new Date());
         setHasUnsavedChanges(false);
       } catch (error) {
-        console.error("Failed to save draft:", error);
+        logger.error("Failed to save draft", error);
       } finally {
         setTimeout(() => setIsSaving(false), 500);
       }

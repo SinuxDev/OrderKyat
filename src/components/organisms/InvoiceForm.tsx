@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ExtractedData } from "@/types/invoice";
-import { StoreInfo } from "@/components/organisms/StoreSettings";
+import type { StoreInfo } from "@/types/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Save, AlertCircle, FileEdit, Truck } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -21,6 +21,8 @@ import {
   useKeyboardShortcuts,
   useDraftLoader,
 } from "@/hooks/useInvoiceEffects";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { logger } from "@/lib/logger";
 
 // ✅ Lazy load heavy components
 const SubtleBackground = dynamic(
@@ -65,16 +67,8 @@ export default function InvoiceForm({
   const { storeInfo, setStoreInfo, updateStoreInfo } = useStoreInfo();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showDeliveryError, setShowDeliveryError] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const [currentTime, setCurrentTime] = useState(() => Date.now());
-
-  // Detect mobile
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useAutoSave(
     formData,
@@ -124,7 +118,7 @@ export default function InvoiceForm({
         try {
           setStoreInfo(JSON.parse(saved));
         } catch (error) {
-          console.error("Failed to reload store info:", error);
+          logger.error("Failed to reload store info", error);
         }
       }
     }
