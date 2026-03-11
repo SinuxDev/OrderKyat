@@ -199,14 +199,161 @@ When adding new code, do not make decisions that break these future capabilities
 
 ---
 
-## Commit & Branch Conventions
+## Git Permissions & Operations
 
-- Branch strategy: feature branches → PR → `master` (auto-deploys to Vercel).
-- Never push directly to `master`.
-- Prefix commits: `feat:` `fix:` `refactor:` `test:` `docs:` `chore:`
-- Keep commits atomic — one logical change per commit.
-- All TypeScript errors must be zero before committing (`npx tsc --noEmit`).
-- All tests must pass before committing (`npm test`).
+This section is the definitive rule set for any agent performing git operations. Read every rule before touching the repository.
+
+---
+
+### Branch Rules
+
+| Branch | Direct push | Force push | Delete |
+|--------|-------------|------------|--------|
+| `master` | **NEVER** | **NEVER** | **NEVER** |
+| `feature/*` | Allowed | Allowed (own branch only) | After PR merge only |
+| `fix/*` | Allowed | Allowed (own branch only) | After PR merge only |
+
+- `master` is the production branch. Every commit on `master` triggers an automatic Vercel deploy. There is no staging gate.
+- **Never run `git push origin master` directly.** All changes reach `master` through a reviewed PR.
+- **Never run `git push --force` or `git push --force-with-lease` on `master`.**
+- Force-push on a feature/fix branch is acceptable only if you created the branch in the current session and it has not been reviewed yet.
+
+---
+
+### Commit Rules
+
+#### What you MUST do before every commit
+1. `npx tsc --noEmit` — must exit with **0 errors**.
+2. `npm test` — all tests must **pass**.
+3. `npm run lint` — must produce **no errors** (warnings are acceptable).
+4. Confirm no `console.log / console.warn / console.error` calls exist outside `logger.ts`.
+5. Confirm no secrets, `.env` values, or API keys are staged.
+
+#### Commit message format
+```
+<type>(<optional scope>): <short imperative summary>
+
+[optional body: explain WHY, not WHAT]
+[optional footer: breaking changes, closes #issue]
+```
+
+**Allowed types:**
+| Type | When to use |
+|------|-------------|
+| `feat` | New user-facing feature |
+| `fix` | Bug fix |
+| `refactor` | Code change with no behaviour change |
+| `test` | Adding or updating tests |
+| `docs` | Documentation only |
+| `chore` | Tooling, deps, config (no src change) |
+| `perf` | Performance improvement |
+| `style` | Formatting, whitespace only |
+
+**Rules:**
+- Summary line: 72 characters max, imperative mood ("add", "fix", "remove" — not "added", "fixes", "removed").
+- Do not end the summary line with a period.
+- Each commit must represent **one logical change**. Do not batch unrelated fixes.
+- Do not use `--no-verify` to skip hooks unless explicitly instructed by the human.
+- Do not amend a commit that has already been pushed to remote without explicit human approval.
+
+#### Examples
+```bash
+# Good
+git commit -m "feat(pdf): add logo field to invoice header"
+git commit -m "fix(extract): handle multi-line item prices correctly"
+git commit -m "test(invoiceUtils): add edge case for zero-item invoices"
+git commit -m "chore: upgrade @react-pdf/renderer to 4.1.0"
+
+# Bad
+git commit -m "fixed stuff"         # vague
+git commit -m "WIP"                 # never commit WIP to a shared branch
+git commit -m "feat: add logo, fix bug, update deps"  # multiple concerns
+```
+
+---
+
+### Branch Naming
+
+```
+feat/<short-slug>       ← new feature
+fix/<short-slug>        ← bug fix
+refactor/<short-slug>   ← internal refactor
+test/<short-slug>       ← test-only changes
+docs/<short-slug>       ← documentation only
+chore/<short-slug>      ← tooling / config
+```
+
+Slugs must be lowercase, hyphen-separated, and describe the change, not the ticket number.  
+**Good**: `feat/logo-upload`, `fix/pdf-font-fallback`  
+**Bad**: `feat/TASK-123`, `fix/johns-branch`, `my-changes`
+
+---
+
+### Pull Request Rules
+
+- Every change to `master` must go through a PR — no exceptions.
+- PR title must follow the same `<type>: <summary>` format as commit messages.
+- PR description must include:
+  - A bullet-point summary of what changed and why.
+  - Confirmation that `tsc`, `npm test`, and `npm run lint` all pass.
+- Prefer **squash merge** to keep `master` history linear and readable.
+- Do not merge your own PR without human approval unless explicitly told to do so.
+- Delete the source branch after merge.
+
+---
+
+### Forbidden Operations (Never Run Without Explicit Human Approval)
+
+| Command | Why it's dangerous |
+|---------|--------------------|
+| `git push --force origin master` | Overwrites production history |
+| `git reset --hard` on a pushed branch | Destroys pushed commits |
+| `git rebase -i` on `master` | Rewrites shared history |
+| `git clean -fd` | Deletes untracked files irreversibly |
+| `git stash drop` | Destroys stashed work |
+| Deleting `master` locally or remotely | Destroys the production branch |
+| `npm run build` → deploy directly | All deploys go through Vercel via `master` |
+
+If the human explicitly approves one of the above, document the reason in the commit message or PR description.
+
+---
+
+### What Agents Are NOT Allowed to Do Without Being Asked
+
+- Create a commit (unless the human says "commit this").
+- Push to any remote branch (unless the human says "push" or "open a PR").
+- Merge a PR (unless the human says "merge it").
+- Delete any branch.
+- Change `git config` (name, email, signing key, etc.).
+- Install new npm packages without explaining what they are and why they're needed.
+- Modify `next.config.ts`, `tailwind.config.ts`, or any file in `src/components/ui/` without explicit instruction.
+
+---
+
+## Commit & Branch Quick Reference
+
+```bash
+# Start new work
+git checkout master && git pull origin master
+git checkout -b feat/my-feature
+
+# Before every commit
+npx tsc --noEmit   # must be zero errors
+npm test           # must pass
+npm run lint       # must pass
+
+# Commit
+git add <specific files>   # never use `git add .` blindly
+git commit -m "feat(scope): summary"
+
+# Open PR (never push directly to master)
+git push origin feat/my-feature
+gh pr create --base master --head feat/my-feature --title "feat: ..." --body "..."
+
+# After merge — clean up
+git checkout master && git pull origin master
+git branch -d feat/my-feature
+```
 
 ---
 
